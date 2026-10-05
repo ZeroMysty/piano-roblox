@@ -949,6 +949,8 @@ class PianoApp:
         self._manual_plus_keys = []
         self._manual_plus_shifted = False
         self._plus_held = False
+        self._plus_pressed = False
+        self._f6_pressed = False
 
         self.combo = 0
         self.max_combo = 0
@@ -1875,8 +1877,12 @@ class PianoApp:
 
         all_bases = shifted_bases + unshifted_bases
         with _injected_lock:
+            for ch in chars:
+                _injected_keys[ch] = _injected_keys.get(ch, 0) + 1
+                _injected_keys[ch.lower()] = _injected_keys.get(ch.lower(), 0) + 1
             for b in all_bases:
                 _injected_keys[b] = _injected_keys.get(b, 0) + 1
+                _injected_keys[b.lower()] = _injected_keys.get(b.lower(), 0) + 1
 
         hold_time = min(0.040, max(0.020, self.key_hold_ms / 1000.0))
         inter_key = 0.005
@@ -2050,8 +2056,22 @@ class PianoApp:
             pass
 
     def _handle_f6(self):
+        self._handle_play_toggle()
+
+    def _handle_play_toggle(self):
+        """Mulai atau jeda AutoPlay secara otomatis, mulus, dan bebas patah-patah."""
+        if not _is_roblox_focused():
+            try:
+                if self.root.focus_get() == getattr(self, "sheet_text", None):
+                    return
+            except Exception:
+                pass
+
         if not self.current_steps:
             self._parse_active_sheet()
+
+        if not self.current_steps:
+            return
 
         if not self.auto_mode:
             self.auto_mode = True
@@ -2064,126 +2084,6 @@ class PianoApp:
                 self._pause()
             else:
                 self._toggle_play()
-
-    def _handle_plus_down(self):
-        """Assist key '+' di Follower Mode: tap atau tahan untuk memainkan not & menggeser sheet seketika."""
-        if self.auto_mode:
-            return
-
-        if getattr(self, "_plus_held", False):
-            return
-
-        if not _is_roblox_focused():
-            try:
-                if self.root.focus_get() == getattr(self, "sheet_text", None):
-                    return
-            except Exception:
-                pass
-
-        if not self.current_steps:
-            self._parse_active_sheet()
-
-        steps = self.current_steps
-        if not steps:
-            return
-
-        if self.state != "playing":
-            if self.state == "finished":
-                self.current_pos = 0
-                self.slots[self.active_slot]["status"] = {}
-            self.state = "playing"
-            self.btn_play.set_text("Pause", fg_color="#f43f5e")
-
-        # Lewati rest di awal jika ada
-        while self.current_pos < len(steps) and steps[self.current_pos][0] == "r":
-            self.current_pos += 1
-
-        if self.current_pos >= len(steps):
-            self._after_advance()
-            return
-
-        self._plus_held = True
-        threading.Thread(target=self._plus_hold_worker, daemon=True).start()
-
-    def _handle_plus_up(self):
-        """Lepas tombol '+': menghentikan worker hold mode."""
-        self._plus_held = False
-        self._release_manual_plus()
-
-    def _plus_hold_worker(self):
-        """Worker thread yang memainkan not dan langsung menggeser sheet selama tombol + ditekan/ditahan."""
-        try:
-            while getattr(self, "_plus_held", False) and self.state == "playing" and not self.auto_mode:
-                steps = self.current_steps
-                if not steps or self.current_pos >= len(steps):
-                    if self.loop_mode:
-                        self.current_pos = 0
-                        self.slots[self.active_slot]["status"] = {}
-                    else:
-                        self.state = "finished"
-                        def _finish():
-                            self._after_advance()
-                        self.root.after(0, _finish)
-                        break
-
-                pos = self.current_pos
-                step = steps[pos]
-                start_t = time.time()
-
-                step_weight = step[2] if len(step) > 2 else 1.0
-                step_dur = max(0.035, self.rest_delay * step_weight)
-
-                if step[0] == "r":
-                    end_t = start_t + step_dur
-                    while time.time() < end_t and getattr(self, "_plus_held", False) and self.state == "playing":
-                        time.sleep(min(0.015, max(0.001, end_t - time.time())))
-                    if not getattr(self, "_plus_held", False):
-                        self.current_pos = pos + 1
-                        self.root.after(0, self._update_visual_canvas)
-                        break
-                    self.current_pos = pos + 1
-                    self.root.after(0, self._update_visual_canvas)
-                    continue
-
-                elif step[0] == "n":
-                    chars = list(step[1])
-
-                    # 1. Mainkan audio sintetis piano
-                    if self.audio.is_enabled():
-                        self.audio.play_chord(chars, velocity=95)
-
-                    # 2. Kirim input ke Roblox jika jendela aktif
-                    if _is_roblox_focused():
-                        self._send_keys_sync(chars)
-
-                    # 3. Nyalakan tuts visual keyboard seketika
-                    if hasattr(self, "keyboard_canvas"):
-                        def _flash(ch_list=chars):
-                            for ch in ch_list:
-                                self.keyboard_canvas.flash_key(ch, color=COLOR_CORRECT, duration_ms=180)
-                        self.root.after(0, _flash)
-
-                    # 4. Tandai benar, tambah combo, dan MAJUKAN NOT SEKETIKA!
-                    self.current_step_status[pos] = "correct"
-                    self.combo += 1
-                    self.correct_count += 1
-                    self.current_pos = pos + 1
-
-                    # 5. Update visual canvas agar sheet LANGSUNG BERGESER di layar
-                    def _ui_update():
-                        self._update_visual_canvas()
-                    self.root.after(0, _ui_update)
-
-                    # 6. Tunggu durasi ketukan not sebelum lanjut ke not berikutnya
-                    spent = time.time() - start_t
-                    remaining = step_dur - spent
-                    if remaining > 0.002:
-                        end_t = time.time() + remaining
-                        while time.time() < end_t and getattr(self, "_plus_held", False) and self.state == "playing":
-                            time.sleep(min(0.015, max(0.001, end_t - time.time())))
-
-        finally:
-            self._plus_held = False
 
     def _tick_body(self):
         roblox_ok = _is_roblox_focused()
@@ -2199,12 +2099,8 @@ class PianoApp:
                 item = self._q.get_nowait()
                 if isinstance(item, tuple):
                     cmd = item[1]
-                    if cmd == "f6":
-                        self._handle_f6()
-                    elif cmd == "plus_down":
-                        self._handle_plus_down()
-                    elif cmd == "plus_up":
-                        self._handle_plus_up()
+                    if cmd in ("f6", "plus_toggle"):
+                        self._handle_play_toggle()
                 elif isinstance(item, str):
                     self.on_key(item)
         except queue.Empty:
@@ -2221,7 +2117,8 @@ class PianoApp:
                     self.audio.play_metronome(accent=False)
 
         # Follower Mode Rest Advance Loop
-        if not self.auto_mode and self.state == "playing" and steps and self.current_pos < len(steps):
+        # HANYA berjalan jika mode manual (Follower Mode) dan TIDAK ada worker otomatis yang sedang aktif
+        if not self.auto_mode and not getattr(self, "_auto_worker_running", False) and self.state == "playing" and steps and self.current_pos < len(steps):
             step = steps[self.current_pos]
             if step[0] == "r":
                 step_weight = step[2] if len(step) > 2 else 1.0
@@ -2238,16 +2135,24 @@ class PianoApp:
                 sc = getattr(e, "scan_code", None)
                 vk = getattr(e, "vk", None)
 
+                # Hotkey F6
                 if name == "f6" or sc == 64 or vk == 117:
                     if e.event_type == "down":
-                        self._q.put(("cmd", "f6"))
+                        if not getattr(self, "_f6_pressed", False):
+                            self._f6_pressed = True
+                            self._q.put(("cmd", "f6"))
+                    elif e.event_type == "up":
+                        self._f6_pressed = False
                     return
 
+                # Hotkey '+' / '=' / Numpad '+'
                 if name in ("+", "plus", "numpad +", "=") or "+" in name or sc in (13, 78) or vk in (187, 107):
                     if e.event_type == "down":
-                        self._q.put(("cmd", "plus_down"))
+                        if not getattr(self, "_plus_pressed", False):
+                            self._plus_pressed = True
+                            self._q.put(("cmd", "plus_toggle"))
                     elif e.event_type == "up":
-                        self._q.put(("cmd", "plus_up"))
+                        self._plus_pressed = False
                     return
 
                 if e.event_type == "down":
@@ -2257,6 +2162,9 @@ class PianoApp:
                     with _injected_lock:
                         if _injected_keys.get(e.name, 0) > 0:
                             _injected_keys[e.name] -= 1
+                            return
+                        if _injected_keys.get(name, 0) > 0:
+                            _injected_keys[name] -= 1
                             return
                     shift_held = self._shift or "shift" in (e.modifiers or ())
                     key = normalize_key(e.name, shift_held)
@@ -2280,7 +2188,8 @@ class PianoApp:
             elapsed = time.time() - self.record_start_time
             self.recorded_keys.append((elapsed, key))
 
-        if self.auto_mode or self.state != "playing":
+        # Jika Auto Player aktif atau worker sedang berjalan, abaikan input manual agar tidak terjadi race condition
+        if self.auto_mode or self.state != "playing" or getattr(self, "_auto_worker_running", False):
             return
         steps = self.current_steps
         if not steps or self.current_pos >= len(steps):
