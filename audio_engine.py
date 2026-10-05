@@ -22,13 +22,15 @@ PROGRAM_CHANGE = 0xC0
 class PianoAudioEngine:
     """Mesin suara piano MIDI Windows dengan polyphony tinggi & note-off scheduler."""
 
-    def __init__(self, base_midi=48):
+    def __init__(self, base_midi=36):
         self.winmm = None
         self.hmidi = ctypes.c_void_p()
         self.available = False
         self.enabled = True
         self.volume = 0.85  # 0.0 sampai 1.0
         self.base_midi = base_midi
+        self.transpose = 0
+        self.sustain = True
         self._lock = threading.Lock()
 
         # Build reverse key-to-pitch map
@@ -61,49 +63,62 @@ class PianoAudioEngine:
         """Atur volume (0.0 sampai 1.0)."""
         self.volume = max(0.0, min(1.0, float(volume)))
 
+    def set_transpose(self, semitones: int):
+        """Atur pergeseran nada (transpose dalam satuan semitone)."""
+        self.transpose = int(semitones)
+
+    def set_sustain(self, sustain: bool):
+        """Aktifkan atau nonaktifkan sustain pedal piano."""
+        self.sustain = bool(sustain)
+
     def is_enabled(self) -> bool:
         return self.enabled and self.available
 
-    def play_key(self, key: str, velocity=95, duration=0.6):
+    def play_key(self, key: str, velocity=95, duration=None):
         """Memainkan satu tuts piano berdasarkan karakter (misal '1', 'q', '!', 'Q')."""
         if not self.enabled or not self.available:
             return
         pitch = self.k2p.get(key)
         if pitch is not None:
-            self._send_note(pitch, velocity, duration)
+            eff_dur = duration if duration is not None else (3.2 if self.sustain else 0.5)
+            self._send_note(pitch + self.transpose, velocity, eff_dur)
 
-    def play_chord(self, keys, velocity=95, duration=0.8):
+    def play_chord(self, keys, velocity=95, duration=None):
         """Memainkan beberapa nada sekaligus (akord)."""
         if not self.enabled or not self.available or not keys:
             return
-        pitches = [self.k2p[k] for k in keys if k in self.k2p]
+        pitches = [self.k2p[k] + self.transpose for k in keys if k in self.k2p]
         if not pitches:
             return
+        eff_dur = duration if duration is not None else (3.5 if self.sustain else 0.6)
         adj_vel = int(max(1, min(127, velocity * self.volume)))
+        valid_pitches = [max(21, min(108, p)) for p in pitches]
+
         with self._lock:
-            for p in pitches:
+            for p in valid_pitches:
                 msg = NOTE_ON | (p << 8) | (adj_vel << 16)
                 self.winmm.midiOutShortMsg(self.hmidi, msg)
 
         def _release():
-            time.sleep(duration)
+            time.sleep(eff_dur)
             with self._lock:
-                for p in pitches:
+                for p in valid_pitches:
                     msg = NOTE_OFF | (p << 8) | (0 << 16)
                     self.winmm.midiOutShortMsg(self.hmidi, msg)
 
         threading.Thread(target=_release, daemon=True).start()
 
     def _send_note(self, pitch: int, velocity=95, duration=0.6):
+        adj_pitch = max(21, min(108, pitch))
         adj_vel = int(max(1, min(127, velocity * self.volume)))
         with self._lock:
-            msg = NOTE_ON | (pitch << 8) | (adj_vel << 16)
+            msg = NOTE_ON | (adj_pitch << 8) | (adj_vel << 16)
             self.winmm.midiOutShortMsg(self.hmidi, msg)
 
         def _release():
             time.sleep(duration)
             with self._lock:
-                msg = NOTE_OFF | (pitch << 8) | (0 << 16)
+                msg = NOTE_OFF | (adj_pitch << 8) | (0 << 16)
                 self.winmm.midiOutShortMsg(self.hmidi, msg)
 
         threading.Thread(target=_release, daemon=True).start()

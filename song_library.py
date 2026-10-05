@@ -68,6 +68,7 @@ class SongLibrary:
             title = clean_display_title(f.name)
             artist = "Roblox Piano"
             bpm = 100
+            transpose = 0
 
             for line in content.splitlines()[:5]:
                 line_str = line.strip()
@@ -76,6 +77,10 @@ class SongLibrary:
                         m = re.search(r"BPM:\s*~?(\d+)", line_str, re.IGNORECASE)
                         if m:
                             bpm = int(m.group(1))
+                    if "Transpose:" in line_str:
+                        m = re.search(r"Transpose:\s*([+-]?\d+)", line_str, re.IGNORECASE)
+                        if m:
+                            transpose = int(m.group(1))
                     if "Sheet Roblox Piano:" in line_str:
                         raw_t = line_str.replace("# Sheet Roblox Piano:", "").strip()
                         raw_t = re.sub(r"\(BPM:[^)]*\)", "", raw_t)
@@ -107,6 +112,7 @@ class SongLibrary:
                 "title": title,
                 "artist": artist,
                 "bpm": bpm,
+                "transpose": transpose,
                 "categories": categories,
                 "stats": stats,
                 "is_fav": is_fav,

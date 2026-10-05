@@ -3,6 +3,7 @@
 Sistem Autoplayer, Follower & Virtual Piano Studio untuk Roblox Piano:
   - Audio Engine: Synthesizer Grand Piano berlatensi ultra-rendah (<5ms) bawaan Windows.
   - Interactive 61-Key Piano: Tuts piano interaktif yang dapat diklik & menampilkan highlight akord.
+  - Smart Musical Rhythm: Auto Player berirama dinamis alami (chords sustain, arpeggios mengalir cepat, jeda bernafas natural seperti PlayPianoSheets).
   - Visual Sheet Display: Format notation tile real-time dengan status benar/salah & auto-scrolling.
   - Performance HUD: Pelacak akurasi, streak/combo counter, metronome & progress durasi.
   - Song Library: Katalog lagu lengkap (Anime, Pop, Klasik, Game) dengan pencarian instan & audio preview.
@@ -95,46 +96,70 @@ _injected_keys: dict = {}
 _injected_lock = threading.Lock()
 
 # ---------------------------------------------------------------------------
-# Display Tokenizer
+# Smart Musical Display Tokenizer (Dynamic Rhythm Weights)
 # ---------------------------------------------------------------------------
-_DISP_TOKEN_RE = re.compile(r'\[[^\]]*\]|\([^)]*\)|[|.\-~_]+|[^\s|.\-~_\[\]()]+')
+_DISP_TOKEN_RE = re.compile(r'\[[^\]]*\]|\{[^}]*\}|\([^)]*\)|[|.\-~_]+|[^\s|.\-~_\[\](){}]+')
 
 
-def build_display_tokens(raw_text):
-    """Parse raw sheet text menjadi display rows & playable steps."""
+def build_display_tokens(raw_text, rhythm_mode="presisi"):
+    """Parse raw sheet text menjadi display rows & playable steps dengan timing presisi PlayPianoSheets."""
     steps = []
     display_rows = []
 
-    for raw_line in raw_text.splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
+    lines = [ln.strip() for ln in raw_text.splitlines() if ln.strip() and not ln.strip().startswith("#")]
 
+    for line in lines:
+        raw_toks = _DISP_TOKEN_RE.findall(line)
+        n = len(raw_toks)
         row_tokens = []
-        for tok in _DISP_TOKEN_RE.findall(line):
-            if all(c in "|.-~_" for c in tok):
+
+        for i, tok in enumerate(raw_toks):
+            is_sep = all(c in "|.-~_" for c in tok)
+            is_chord = (tok.startswith("[") and tok.endswith("]")) or (tok.startswith("(") and tok.endswith(")"))
+            is_fast = (tok.startswith("{") and tok.endswith("}"))
+
+            if is_sep:
                 step_idx = len(steps)
-                steps.append(("r", len(tok)))
+                w = float(len(tok))
+                steps.append(("r", len(tok), w))
                 row_tokens.append({"text": tok, "step_idx": step_idx, "is_sep": True})
-            elif tok.startswith("[") and tok.endswith("]"):
+
+            elif is_chord:
+                # Bersihkan spasi dan strip tanda hubung di dalam kurung akord (mis. [p-9-d-g])
                 inner = tok[1:-1].replace(" ", "")
                 keys = frozenset(ch for ch in inner if ch in VALID_KEYS)
                 if keys:
                     step_idx = len(steps)
-                    steps.append(("n", keys))
+                    w = 1.0
+                    steps.append(("n", keys, w))
                     row_tokens.append({"text": tok, "step_idx": step_idx, "is_sep": False})
-            elif tok.startswith("(") and tok.endswith(")"):
+
+            elif is_fast:
+                # Fast sequence dalam kurung kurawal {abc} (50ms per key)
                 inner = tok[1:-1].replace(" ", "")
-                keys = frozenset(ch for ch in inner if ch in VALID_KEYS)
+                keys = [ch for ch in inner if ch in VALID_KEYS]
                 if keys:
                     step_idx = len(steps)
-                    steps.append(("n", keys))
+                    w = 0.25 * len(keys)
+                    steps.append(("n", frozenset(keys), w))
                     row_tokens.append({"text": tok, "step_idx": step_idx, "is_sep": False})
+
             else:
-                for ch in tok:
+                # Single notes atau rangkaian tanpa spasi (misal: asdf)
+                if len(tok) > 1:
+                    # Rangkaian rapat tanpa spasi = urutan cepat (ornamen / run)
+                    for ch in tok:
+                        if ch in VALID_KEYS:
+                            step_idx = len(steps)
+                            w = 0.5
+                            steps.append(("n", frozenset([ch]), w))
+                            row_tokens.append({"text": ch, "step_idx": step_idx, "is_sep": False})
+                else:
+                    ch = tok
                     if ch in VALID_KEYS:
                         step_idx = len(steps)
-                        steps.append(("n", frozenset([ch])))
+                        w = 1.0
+                        steps.append(("n", frozenset([ch]), w))
                         row_tokens.append({"text": ch, "step_idx": step_idx, "is_sep": False})
 
         if row_tokens:
@@ -243,8 +268,8 @@ class VirtualPianoKeyboardCanvas(tk.Canvas):
         super().__init__(parent, bg=bg, highlightthickness=0, bd=0, height=72, **kwargs)
         self.on_key_click = on_key_click
         self.active_keys = set()
-        self.flashing_keys = {}  # {key: color}
-        self.label_mode = "key"  # "key" | "note" | "both" | "none"
+        self.flashing_keys = {}
+        self.label_mode = "key"
 
         self.bind("<Configure>", lambda _e: self.redraw())
         self.bind("<Button-1>", self._on_canvas_click)
@@ -254,7 +279,6 @@ class VirtualPianoKeyboardCanvas(tk.Canvas):
         self.redraw()
 
     def flash_key(self, key, color=COLOR_CORRECT, duration_ms=250):
-        """Efek visual kilau saat tuts ditekan."""
         self.flashing_keys[key] = color
         self.redraw()
         def _clear():
@@ -277,7 +301,6 @@ class VirtualPianoKeyboardCanvas(tk.Canvas):
         kh_black = int(kh_white * 0.62)
         bw = max(6, kw * 0.65)
 
-        # Cek tombol hitam terlebih dahulu (karena berada di layer atas)
         if y <= 3 + kh_black:
             for gap, key in BLACK_KEY_GAPS:
                 if gap < num_white - 1:
@@ -285,7 +308,6 @@ class VirtualPianoKeyboardCanvas(tk.Canvas):
                     if (x_center - bw / 2) <= x <= (x_center + bw / 2):
                         return key
 
-        # Cek tombol putih
         if 0 <= y <= 3 + kh_white:
             idx = int((x - pad_x) // kw)
             if 0 <= idx < num_white:
@@ -333,12 +355,10 @@ class VirtualPianoKeyboardCanvas(tk.Canvas):
 
             round_rect(self, x0, y0, x1, y1, r=3, fill=fill_col, outline=border_col, width=1)
 
-            # Indikator Oktaf C
             note_name = key_note_name(key)
             if note_name.startswith("C") and not "#" in note_name:
                 self.create_text(x0 + kw / 2, y1 - 4, text=note_name, font=(FONT, 6, "bold"), fill=ACCENT_AMBER)
 
-            # Label teks pada tombol
             if self.label_mode != "none" and kw >= 12:
                 lbl_col = "#ffffff" if (is_act or is_flash) else "#94a3b8"
                 font_sz = 7 if kw < 18 else 8
@@ -443,7 +463,7 @@ class VisualSheetCanvas(tk.Canvas):
             )
             self.create_text(
                 w / 2, h / 2 + 18,
-                text="Klik tombol 'Songs' di header atas untuk membuka puluhan lagu populer.",
+                text="Klik tombol 'Library' di header atas untuk membuka puluhan lagu populer.",
                 font=(FONT, 9), fill=TEXT_DIM, justify="center"
             )
             return
@@ -494,7 +514,6 @@ class VisualSheetCanvas(tk.Canvas):
                     continue
 
                 if step_idx == self.active_step_idx:
-                    # Kotak Biru Not Aktif dengan Glow Border
                     round_rect(self, x_center - tw / 2, y_center - 20,
                                x_center + tw / 2, y_center + 20, 6,
                                fill=COLOR_ACTIVE_BG, outline=ACCENT_CYAN, width=2)
@@ -511,7 +530,7 @@ class VisualSheetCanvas(tk.Canvas):
 
 
 # ---------------------------------------------------------------------------
-# Modal Dialog: Song Library (Katalog Lagu Lengkap seperti PlayPianoSheet)
+# Modal Dialog: Song Library
 # ---------------------------------------------------------------------------
 class SongLibraryModal(tk.Toplevel):
     """Dialog browser lagu canggih dengan pencarian instan, kategori, info kesulitan & audio preview."""
@@ -530,7 +549,6 @@ class SongLibraryModal(tk.Toplevel):
         self.transient(parent)
         self.grab_set()
 
-        # Center position
         x = parent.winfo_x() + (parent.winfo_width() - 780) // 2
         y = parent.winfo_y() + (parent.winfo_height() - 520) // 2
         self.geometry(f"+{max(0, x)}+{max(0, y)}")
@@ -543,7 +561,6 @@ class SongLibraryModal(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _build_ui(self):
-        # Header Box
         header = tk.Frame(self, bg=PANEL_BG)
         header.pack(fill="x", padx=18, pady=(14, 8))
 
@@ -552,7 +569,7 @@ class SongLibraryModal(tk.Toplevel):
         tk.Label(header, text="Pilih lagu untuk langsung dimainkan atau dengarkan cuplikan audio.",
                  bg=PANEL_BG, fg=TEXT_DIM, font=(FONT, 9)).pack(side="left", padx=(10, 0))
 
-        # Search & Filter Bar
+        # Search Bar
         search_box = tk.Frame(self, bg=PANEL_BG)
         search_box.pack(fill="x", padx=18, pady=(0, 8))
 
@@ -566,7 +583,7 @@ class SongLibraryModal(tk.Toplevel):
         RoundedButton(search_box, text="Clear", command=self._clear_search, width=60, height=28, font=(FONT, 8))\
             .pack(side="left", padx=2)
 
-        # Category Filter Pills
+        # Categories
         cat_frame = tk.Frame(self, bg=PANEL_BG)
         cat_frame.pack(fill="x", padx=18, pady=(0, 10))
 
@@ -579,7 +596,7 @@ class SongLibraryModal(tk.Toplevel):
             btn.pack(side="left", padx=2)
             self.cat_buttons[cat] = btn
 
-        # Main Split Content: Left List, Right Details Card
+        # Main Split Content
         main_content = tk.Frame(self, bg=PANEL_BG)
         main_content.pack(fill="both", expand=True, padx=18, pady=(0, 10))
 
@@ -598,14 +615,14 @@ class SongLibraryModal(tk.Toplevel):
         self.listbox.bind("<<ListboxSelect>>", self._on_select_song)
         self.listbox.bind("<Double-Button-1>", lambda _e: self._load_current_selection())
 
-        # Right Column: Song Details Card
+        # Right Column: Details Card
         self.right_card = tk.Frame(main_content, bg=CARD_BG, bd=1, relief="solid", width=340)
         self.right_card.pack(side="right", fill="both", padx=(10, 0))
         self.right_card.pack_propagate(False)
 
         self._build_details_card()
 
-        # Bottom Action Bar
+        # Bottom Bar
         dock = tk.Frame(self, bg=PANEL_BG)
         dock.pack(fill="x", padx=18, pady=(4, 14))
 
@@ -625,7 +642,6 @@ class SongLibraryModal(tk.Toplevel):
         self.lbl_det_stars = tk.Label(pad, text="", bg=CARD_BG, fg=ACCENT_AMBER, font=(FONT, 10, "bold"))
         self.lbl_det_stars.pack(anchor="w", pady=(2, 6))
 
-        # Stats Grid
         self.stats_frame = tk.Frame(pad, bg=CARD_BG)
         self.stats_frame.pack(fill="x", pady=4)
 
@@ -641,14 +657,12 @@ class SongLibraryModal(tk.Toplevel):
         self.lbl_stat_dur = tk.Label(self.stats_frame, text="Durasi: -", bg=CARD_BG, fg=TEXT_MUTED, font=(FONT, 8))
         self.lbl_stat_dur.grid(row=1, column=1, sticky="w", pady=2)
 
-        # Preview Sheet Snippet Box
         tk.Label(pad, text="Preview Notasi:", bg=CARD_BG, fg=TEXT_DIM, font=(FONT, 8, "bold")).pack(anchor="w", pady=(8, 2))
         self.txt_preview = tk.Text(pad, bg="#0a0e16", fg=TEXT_WHITE, font=("Consolas", 9),
                                    bd=0, height=7, wrap="word", highlightthickness=1,
                                    highlightbackground=CARD_BORDER)
         self.txt_preview.pack(fill="x", pady=(0, 10))
 
-        # Action Buttons in Card
         btn_box = tk.Frame(pad, bg=CARD_BG)
         btn_box.pack(fill="x", side="bottom")
 
@@ -742,18 +756,24 @@ class SongLibraryModal(tk.Toplevel):
         content = self.selected_item["content"]
         bpm = self.selected_item["bpm"]
 
+        t = self.selected_item.get("transpose", 0)
+        if self.audio:
+            self.audio.set_transpose(t)
+
         def _preview_worker():
-            _, steps = build_display_tokens(content)
-            delay = 60.0 / max(30, bpm)
-            # Mainkan maksimal 24 langkah
-            for step in steps[:24]:
+            _, steps = build_display_tokens(content, rhythm_mode="presisi")
+            base_delay = 60.0 / max(30, bpm)
+            for step in steps[:28]:
                 if not self.is_previewing:
                     break
+                w = step[2] if len(step) > 2 else 1.0
+                step_dur = max(0.04, base_delay * w)
+
                 if step[0] == "n":
                     keys = list(step[1])
                     if self.audio and self.audio.is_enabled():
-                        self.audio.play_chord(keys, velocity=90, duration=delay * 0.9)
-                time.sleep(delay)
+                        self.audio.play_chord(keys, velocity=95)
+                time.sleep(step_dur)
 
             self.is_previewing = False
             try:
@@ -769,7 +789,8 @@ class SongLibraryModal(tk.Toplevel):
         self.is_previewing = False
         if self.audio:
             self.audio.stop_all()
-        self.on_load_song(self.selected_item["content"], self.selected_item["bpm"], self.selected_item["title"])
+        self.on_load_song(self.selected_item["content"], self.selected_item["bpm"],
+                          self.selected_item["title"], self.selected_item.get("transpose", 0))
         self.destroy()
 
     def _open_folder(self):
@@ -784,7 +805,7 @@ class SongLibraryModal(tk.Toplevel):
 
 
 # ---------------------------------------------------------------------------
-# Modal Dialog: Sheet Tools (Transpose, Beautifier, Chord Simplifier)
+# Modal Dialog: Sheet Tools
 # ---------------------------------------------------------------------------
 class SheetToolsModal(tk.Toplevel):
     """Dialog utilitas lengkap: Transpose real-time, beautify format, & simplifikasi akord."""
@@ -808,14 +829,13 @@ class SheetToolsModal(tk.Toplevel):
         self._build_ui()
 
     def _build_ui(self):
-        # Header
         header = tk.Frame(self, bg=PANEL_BG)
         header.pack(fill="x", padx=16, pady=(12, 6))
 
         tk.Label(header, text="Alat Bantu Sheet Piano", bg=PANEL_BG, fg=TEXT_WHITE,
                  font=(FONT, 12, "bold")).pack(side="left")
 
-        # Section 1: Transpose Controls
+        # Transpose
         tr_card = tk.Frame(self, bg=CARD_BG, bd=1, relief="solid")
         tr_card.pack(fill="x", padx=16, pady=6)
 
@@ -826,6 +846,7 @@ class SheetToolsModal(tk.Toplevel):
         tr_row.pack(fill="x", padx=12, pady=(0, 8))
 
         RoundedButton(tr_row, text="-12", command=lambda: self._shift_transpose(-12), width=40, height=28, font=(FONT, 8)).pack(side="left", padx=2)
+        RoundedButton(tr_row, text="-3", command=lambda: self._shift_transpose(-3), width=35, height=28, font=(FONT, 8)).pack(side="left", padx=2)
         RoundedButton(tr_row, text="-1", command=lambda: self._shift_transpose(-1), width=35, height=28, font=(FONT, 8)).pack(side="left", padx=2)
 
         self.lbl_tr_val = tk.Label(tr_row, text="Transpose: 0 semitone", bg=CARD_BG, fg=TEXT_WHITE,
@@ -833,12 +854,13 @@ class SheetToolsModal(tk.Toplevel):
         self.lbl_tr_val.pack(side="left", padx=4)
 
         RoundedButton(tr_row, text="+1", command=lambda: self._shift_transpose(1), width=35, height=28, font=(FONT, 8)).pack(side="left", padx=2)
+        RoundedButton(tr_row, text="+3", command=lambda: self._shift_transpose(3), width=35, height=28, font=(FONT, 8)).pack(side="left", padx=2)
         RoundedButton(tr_row, text="+12", command=lambda: self._shift_transpose(12), width=40, height=28, font=(FONT, 8)).pack(side="left", padx=2)
 
         RoundedButton(tr_row, text="Reset", command=lambda: self._set_transpose(0), width=50, height=28, font=(FONT, 8))\
             .pack(side="left", padx=(10, 2))
 
-        # Section 2: Quick Format & Simplification Buttons
+        # Format & Simplification
         tools_row = tk.Frame(self, bg=PANEL_BG)
         tools_row.pack(fill="x", padx=16, pady=4)
 
@@ -847,7 +869,6 @@ class SheetToolsModal(tk.Toplevel):
         RoundedButton(tools_row, text="Sederhanakan Akord (Max 2 Nada)", command=self._do_simplify,
                       width=210, height=30, fg_color=ACCENT_PURPLE, font=(FONT, 8, "bold")).pack(side="left", padx=4)
 
-        # Section 3: Text Preview Area
         tk.Label(self, text="Preview Hasil Pengeditan:", bg=PANEL_BG, fg=TEXT_MUTED, font=(FONT, 8, "bold"))\
             .pack(anchor="w", padx=16, pady=(8, 2))
 
@@ -857,7 +878,6 @@ class SheetToolsModal(tk.Toplevel):
         self.txt_result.pack(fill="both", expand=True, padx=16, pady=(0, 10))
         self.txt_result.insert("1.0", self.raw_text)
 
-        # Bottom Actions
         dock = tk.Frame(self, bg=PANEL_BG)
         dock.pack(fill="x", padx=16, pady=(0, 12))
 
@@ -906,10 +926,14 @@ class PianoApp:
         }
 
         self.state = "ready"        # ready | playing | paused | finished
-        self.bpm = int(self.cfg.get("bpm", 100))
+        self.bpm = int(self.cfg.get("bpm", 180))  # Default 180 BPM untuk PlayPianoSheets
         self.speed_multiplier = float(self.cfg.get("speed_multiplier", 1.0))
-        self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 3)
+        self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 4)
         self.auto_mode = False      # Default: Follower Mode
+        self.transpose = int(self.cfg.get("transpose", 0))
+        self.sustain = bool(self.cfg.get("sustain", True))
+        self.rhythm_mode = self.cfg.get("rhythm_mode", "presisi")
+        self.auto_target = self.cfg.get("auto_target", "roblox")  # "roblox" (ketik game) | "app" (preview suara)
         self.loop_mode = bool(self.cfg.get("loop_mode", False))
         self.metronome_active = False
         self.is_pinned = bool(self.cfg.get("pinned", False))
@@ -917,7 +941,7 @@ class PianoApp:
         self.last_rest_time = 0.0
         self.last_metro_time = 0.0
         self.right_view_mode = "visual"
-        self.key_hold_ms = int(self.cfg.get("key_hold_ms", 60))
+        self.key_hold_ms = int(self.cfg.get("key_hold_ms", 45))
         self._q = queue.Queue()
         self._shift = False
         self._hook_cb = None
@@ -925,7 +949,6 @@ class PianoApp:
         self._manual_plus_keys = []
         self._manual_plus_shifted = False
 
-        # Gamified Performance Counters
         self.combo = 0
         self.max_combo = 0
         self.correct_count = 0
@@ -935,13 +958,14 @@ class PianoApp:
         self.audio = PianoAudioEngine()
         audio_enabled = self.cfg.get("audio_enabled", True)
         self.audio.set_enabled(audio_enabled)
-        self.audio.set_volume(float(self.cfg.get("volume", 0.85)))
+        self.audio.set_volume(float(self.cfg.get("volume", 0.90)))
+        self.audio.set_transpose(self.transpose)
+        self.audio.set_sustain(self.sustain)
 
         # Song Library Initialisation
         favs = self.cfg.get("favorites", [])
         self.song_library = SongLibrary(SONGS_DIR, favorites=favs)
 
-        # Recording system
         self.recording = False
         self.recorded_keys = []
         self.record_start_time = 0.0
@@ -967,7 +991,6 @@ class PianoApp:
         if self.is_pinned:
             self.root.attributes("-topmost", True)
 
-        # Container Utama Glassmorphism
         main_box = tk.Frame(self.root, bg=PANEL_BG, bd=1, relief="solid")
         main_box.pack(fill="both", expand=True, padx=8, pady=8)
 
@@ -978,10 +1001,11 @@ class PianoApp:
         tk.Label(header, text="ROBLOX PIANO STUDIO", bg=PANEL_BG, fg=TEXT_WHITE,
                  font=(FONT, 12, "bold")).pack(side="left", padx=(4, 6))
 
-        # Status Focus Roblox Badge
+        # Status Focus Roblox Badge (Clickable to switch Auto Target)
         self.lbl_focus_badge = tk.Label(header, text="[FOKUS KE ROBLOX]", bg="#2a2410", fg="#f59e0b",
-                                        font=(FONT, 8, "bold"), padx=8, pady=3)
+                                        font=(FONT, 8, "bold"), padx=8, pady=3, cursor="hand2")
         self.lbl_focus_badge.pack(side="left", padx=4)
+        self.lbl_focus_badge.bind("<Button-1>", lambda _e: self._toggle_auto_target())
 
         # Slot Selector Presets (1, 2, 3)
         tk.Label(header, text="Slot:", bg=PANEL_BG, fg=TEXT_DIM, font=(FONT, 9)).pack(side="left", padx=(10, 4))
@@ -1027,7 +1051,6 @@ class PianoApp:
         self.lbl_hud_streak = tk.Label(hud_bar, text="Combo: 0", bg="#0a0e16", fg=ACCENT_AMBER, font=(FONT, 8, "bold"))
         self.lbl_hud_streak.pack(side="left", padx=6)
 
-        # Navigation Controls on HUD (|<<, <<, >>, Loop, Metronome)
         RoundedButton(hud_bar, text="|<<", command=self._restart_position, width=32, height=22, font=(FONT, 7)).pack(side="right", padx=2)
         RoundedButton(hud_bar, text="<< 5", command=lambda: self._jump_steps(-5), width=42, height=22, font=(FONT, 7)).pack(side="right", padx=2)
         RoundedButton(hud_bar, text="5 >>", command=lambda: self._jump_steps(5), width=42, height=22, font=(FONT, 7)).pack(side="right", padx=2)
@@ -1044,11 +1067,9 @@ class PianoApp:
         display_frame = tk.Frame(main_box, bg="#06080c", bd=1, relief="solid")
         display_frame.pack(fill="both", expand=True, padx=12, pady=2)
 
-        # Canvas Visual Sheet
         self.visual_canvas = VisualSheetCanvas(display_frame, bg="#06080c")
         self.visual_canvas.pack(fill="both", expand=True)
 
-        # Text Editor Sheet
         self.editor_frame = tk.Frame(display_frame, bg="#0d1117")
         self.sheet_text = scrolledtext.ScrolledText(
             self.editor_frame, bg="#0d1117", fg=TEXT_WHITE,
@@ -1064,7 +1085,6 @@ class PianoApp:
         piano_box.pack(fill="x", padx=12, pady=(2, 4))
         piano_box.pack_propagate(False)
 
-        # Keyboard Label Mode Toggle
         label_bar = tk.Frame(piano_box, bg="#06080c")
         label_bar.pack(fill="x", padx=8, pady=(1, 0))
 
@@ -1081,64 +1101,103 @@ class PianoApp:
         dock.pack(fill="x", padx=12, pady=(4, 8))
 
         # Playback Controls
-        self.btn_play = RoundedButton(dock, text="Play", command=self._toggle_play, width=70, height=36,
+        self.btn_play = RoundedButton(dock, text="Play", command=self._toggle_play, width=62, height=36,
                                       font=(FONT, 9, "bold"), fg_color=COLOR_CORRECT)
         self.btn_play.pack(side="left", padx=2)
-        self.btn_stop = RoundedButton(dock, text="Stop", command=self._stop, width=60, height=36, font=(FONT, 9, "bold"))
+        self.btn_stop = RoundedButton(dock, text="Stop", command=self._stop, width=52, height=36, font=(FONT, 9, "bold"))
         self.btn_stop.pack(side="left", padx=2)
 
         # Mode Switch (Follower vs Auto Player)
         self.btn_mode_toggle = RoundedButton(dock, text="Follower Mode", command=self._toggle_auto_mode,
-                                             width=115, height=36, font=(FONT, 9, "bold"))
-        self.btn_mode_toggle.pack(side="left", padx=4)
+                                             width=102, height=36, font=(FONT, 8, "bold"))
+        self.btn_mode_toggle.pack(side="left", padx=2)
+
+        # Transpose Controls (TRANS: -3 / + / Reset)
+        tk.Frame(dock, bg=CARD_BORDER, width=1, height=24).pack(side="left", padx=2)
+        RoundedButton(dock, text="-", command=lambda: self._change_transpose(-1), width=22, height=32, font=(FONT, 10, "bold")).pack(side="left", padx=1)
+        tr_text = f"TRANS: {self.transpose:+d}" if self.transpose != 0 else "TRANS: 0"
+        tr_color = ACCENT_PURPLE if self.transpose != 0 else TEXT_MUTED
+        self.btn_trans_val = RoundedButton(dock, text=tr_text, command=lambda: self._change_transpose(0, reset=True),
+                                           width=70, height=32, font=(FONT, 8, "bold"), fg_color=tr_color)
+        self.btn_trans_val.pack(side="left", padx=1)
+        RoundedButton(dock, text="+", command=lambda: self._change_transpose(1), width=22, height=32, font=(FONT, 10, "bold")).pack(side="left", padx=1)
+
+        # Sustain Pedal Toggle
+        tk.Frame(dock, bg=CARD_BORDER, width=1, height=24).pack(side="left", padx=2)
+        sustain_title = "Sustain: ON" if self.sustain else "Sustain: OFF"
+        sustain_color = ACCENT_CYAN if self.sustain else TEXT_MUTED
+        self.btn_sustain = RoundedButton(dock, text=sustain_title, command=self._toggle_sustain,
+                                         width=80, height=36, font=(FONT, 8, "bold"), fg_color=sustain_color)
+        self.btn_sustain.pack(side="left", padx=2)
+
+        # Target Auto Player Switcher (Roblox vs App Suara)
+        target_title = "Auto: Roblox" if self.auto_target == "roblox" else "Auto: App Suara"
+        target_color = COLOR_CORRECT if self.auto_target == "roblox" else ACCENT_CYAN
+        self.btn_auto_target = RoundedButton(dock, text=target_title, command=self._toggle_auto_target,
+                                             width=90, height=36, font=(FONT, 8, "bold"), fg_color=target_color)
+        self.btn_auto_target.pack(side="left", padx=2)
 
         # Speed Multipliers (0.5x, 0.75x, 1x, 1.25x, 1.5x)
-        tk.Frame(dock, bg=CARD_BORDER, width=1, height=24).pack(side="left", padx=4)
+        tk.Frame(dock, bg=CARD_BORDER, width=1, height=24).pack(side="left", padx=2)
         self.speed_buttons = {}
         for spd in (0.5, 0.75, 1.0, 1.25, 1.5):
             lbl = f"{spd}x" if spd != 1.0 else "1.0x"
             btn = RoundedButton(dock, text=lbl, command=lambda s=spd: self._set_speed(s),
-                                width=38, height=30, font=(FONT, 8, "bold"), is_active=(spd == self.speed_multiplier))
+                                width=34, height=30, font=(FONT, 8, "bold"), is_active=(spd == self.speed_multiplier))
             btn.pack(side="left", padx=1)
             self.speed_buttons[spd] = btn
 
         # BPM Control
-        tk.Frame(dock, bg=CARD_BORDER, width=1, height=24).pack(side="left", padx=4)
-        RoundedButton(dock, text="-", command=lambda: self._change_bpm(-5), width=28, height=32, font=(FONT, 11, "bold")).pack(side="left", padx=1)
-        self.btn_bpm_val = RoundedButton(dock, text=f"BPM: {self.bpm}", command=self._edit_bpm, width=88, height=32, font=(FONT, 8, "bold"))
+        tk.Frame(dock, bg=CARD_BORDER, width=1, height=24).pack(side="left", padx=2)
+        RoundedButton(dock, text="-", command=lambda: self._change_bpm(-5), width=22, height=32, font=(FONT, 10, "bold")).pack(side="left", padx=1)
+        self.btn_bpm_val = RoundedButton(dock, text=f"BPM: {self.bpm}", command=self._edit_bpm, width=74, height=32, font=(FONT, 8, "bold"))
         self.btn_bpm_val.pack(side="left", padx=1)
-        RoundedButton(dock, text="+", command=lambda: self._change_bpm(5), width=28, height=32, font=(FONT, 11, "bold")).pack(side="left", padx=1)
+        RoundedButton(dock, text="+", command=lambda: self._change_bpm(5), width=22, height=32, font=(FONT, 10, "bold")).pack(side="left", padx=1)
 
         # Audio Sound Toggle
-        tk.Frame(dock, bg=CARD_BORDER, width=1, height=24).pack(side="left", padx=4)
+        tk.Frame(dock, bg=CARD_BORDER, width=1, height=24).pack(side="left", padx=2)
         audio_lbl = "Suara: ON" if self.audio.is_enabled() else "Suara: OFF"
         audio_fg = ACCENT_CYAN if self.audio.is_enabled() else TEXT_MUTED
         self.btn_audio = RoundedButton(dock, text=audio_lbl, command=self._toggle_audio,
-                                       width=85, height=36, font=(FONT, 8, "bold"), fg_color=audio_fg)
+                                       width=76, height=36, font=(FONT, 8, "bold"), fg_color=audio_fg)
         self.btn_audio.pack(side="left", padx=2)
 
-        # Right Side Actions: Tools, Import/AI, Quick Paste, Clear
-        RoundedButton(dock, text="Clear", command=self._clear_sheet_box, width=55, height=36, font=(FONT, 9))\
-            .pack(side="right", padx=2)
-        RoundedButton(dock, text="Paste", command=self._quick_paste, width=58, height=36, font=(FONT, 9, "bold"))\
-            .pack(side="right", padx=2)
-        RoundedButton(dock, text="Tools", command=self._open_tools_modal, width=65, height=36,
-                      font=(FONT, 9, "bold"), fg_color=ACCENT_PURPLE).pack(side="right", padx=2)
-        RoundedButton(dock, text="Import / AI", command=self._open_import_choice_dialog, width=95, height=36,
-                      font=(FONT, 9, "bold"), fg_color=ACCENT_CYAN).pack(side="right", padx=2)
+        # Right Actions
+        RoundedButton(dock, text="Clear", command=self._clear_sheet_box, width=50, height=36, font=(FONT, 9))\
+            .pack(side="right", padx=1)
+        RoundedButton(dock, text="Paste", command=self._quick_paste, width=52, height=36, font=(FONT, 9, "bold"))\
+            .pack(side="right", padx=1)
+        RoundedButton(dock, text="Tools", command=self._open_tools_modal, width=56, height=36,
+                       font=(FONT, 9, "bold"), fg_color=ACCENT_PURPLE).pack(side="right", padx=1)
+        RoundedButton(dock, text="Import / AI", command=self._open_import_choice_dialog, width=86, height=36,
+                       font=(FONT, 8, "bold"), fg_color=ACCENT_CYAN).pack(side="right", padx=1)
 
         self._set_view_mode("visual")
 
     # ---------------------------------------------------------------- Initial Loader
     def _load_initial_sheet(self):
-        """Memuat lagu default jika slot masih kosong."""
-        sample_path = SONGS_DIR / "canon_in_d.txt"
+        sample_path = SONGS_DIR / "wet_hands.txt"
+        if not sample_path.exists():
+            sample_path = SONGS_DIR / "canon_in_d.txt"
         if sample_path.exists():
             try:
                 txt = sample_path.read_text(encoding="utf-8", errors="replace")
                 self.sheet_text.delete("1.0", "end")
                 self.sheet_text.insert("1.0", txt)
-                self.lbl_hud_song.configure(text="Lagu: Canon in D")
+                self.lbl_hud_song.configure(text=f"Lagu: {clean_display_title(sample_path.name)}")
+
+                for line in txt.splitlines()[:5]:
+                    line_str = line.strip()
+                    if "BPM:" in line_str:
+                        m = re.search(r"BPM:\s*~?(\d+)", line_str, re.IGNORECASE)
+                        if m:
+                            self.bpm = int(m.group(1))
+                            self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 4)
+                            self.btn_bpm_val.set_text(f"BPM: {self.bpm}")
+                    if "Transpose:" in line_str:
+                        m = re.search(r"Transpose:\s*([+-]?\d+)", line_str, re.IGNORECASE)
+                        if m:
+                            self._set_transpose(int(m.group(1)))
             except Exception:
                 pass
         self._parse_active_sheet()
@@ -1171,6 +1230,40 @@ class PianoApp:
         self.btn_pin.set_text("Pinned" if self.is_pinned else "Pin")
         self.btn_pin.set_active(self.is_pinned, active_border=ACCENT_AMBER)
 
+    def _change_transpose(self, delta, reset=False):
+        if reset:
+            self.transpose = 0
+        else:
+            self.transpose = max(-36, min(36, self.transpose + delta))
+        self._update_transpose_ui()
+
+    def _set_transpose(self, val):
+        self.transpose = max(-36, min(36, int(val)))
+        self._update_transpose_ui()
+
+    def _update_transpose_ui(self):
+        self.audio.set_transpose(self.transpose)
+        if hasattr(self, "btn_trans_val"):
+            t_text = f"TRANS: {self.transpose:+d}" if self.transpose != 0 else "TRANS: 0"
+            t_color = ACCENT_PURPLE if self.transpose != 0 else TEXT_MUTED
+            self.btn_trans_val.set_text(t_text, fg_color=t_color)
+        self.cfg["transpose"] = self.transpose
+
+    def _toggle_sustain(self):
+        self.sustain = not self.sustain
+        self.audio.set_sustain(self.sustain)
+        if hasattr(self, "btn_sustain"):
+            s_text = "Sustain: ON" if self.sustain else "Sustain: OFF"
+            s_color = ACCENT_CYAN if self.sustain else TEXT_MUTED
+            self.btn_sustain.set_text(s_text, fg_color=s_color)
+        self.cfg["sustain"] = self.sustain
+
+    def _toggle_auto_target(self):
+        self.auto_target = "app" if self.auto_target == "roblox" else "roblox"
+        target_title = "Auto: Roblox" if self.auto_target == "roblox" else "Auto: App Suara"
+        target_color = COLOR_CORRECT if self.auto_target == "roblox" else ACCENT_CYAN
+        self.btn_auto_target.set_text(target_title, fg_color=target_color)
+
     def _update_visual_canvas(self):
         steps = self.current_steps
         active_note_idx = _find_active_note_step(steps, self.current_pos)
@@ -1180,7 +1273,6 @@ class PianoApp:
             if step[0] == "n":
                 active_keys = set(step[1])
 
-        # Hitung statistik HUD
         total = len(steps)
         curr = max(0, self.current_pos)
         pct = int(min(1.0, curr / max(1, total)) * 100)
@@ -1223,13 +1315,14 @@ class PianoApp:
     def _open_library_modal(self):
         SongLibraryModal(self.root, self.song_library, self.audio, on_load_song=self._load_song_from_library)
 
-    def _load_song_from_library(self, sheet_text, bpm, title):
+    def _load_song_from_library(self, sheet_text, bpm, title, transpose=0):
         self.sheet_text.delete("1.0", "end")
         self.sheet_text.insert("1.0", sheet_text)
         self.bpm = max(20, min(1000, bpm))
-        self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 3)
+        self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 4)
         self.btn_bpm_val.set_text(f"BPM: {self.bpm}")
         self.lbl_hud_song.configure(text=f"Lagu: {title[:32]}")
+        self._set_transpose(transpose)
 
         self._parse_active_sheet()
         self.current_pos = 0
@@ -1287,7 +1380,7 @@ class PianoApp:
         if not raw.strip() or raw.strip() == "Paste sheet lagu di sini...":
             self.slots[self.active_slot].update(steps=[], display_rows=[], status={})
             return
-        display_rows, steps = build_display_tokens(raw)
+        display_rows, steps = build_display_tokens(raw, rhythm_mode=self.rhythm_mode)
         self.slots[self.active_slot]["steps"] = steps
         self.slots[self.active_slot]["display_rows"] = display_rows
         if self.current_pos >= len(steps):
@@ -1321,7 +1414,6 @@ class PianoApp:
 
     # ---------------------------------------------------------------- Import / AI Dialog
     def _open_import_choice_dialog(self):
-        """Buka modal pilihan import: (1) MIDI langsung, atau (2) Konversi Audio MP3 via AI."""
         win = tk.Toplevel(self.root)
         win.title("Import / Konversi Lagu")
         win.configure(bg=PANEL_BG)
@@ -1347,7 +1439,6 @@ class PianoApp:
             win.destroy()
             self._open_audio_dialog()
 
-        # Card 1: MIDI
         card1 = tk.Frame(win, bg=CARD_BG, bd=1, relief="solid", cursor="hand2")
         card1.pack(fill="x", padx=20, pady=(0, 10))
         c1_top = tk.Frame(card1, bg=CARD_BG)
@@ -1357,7 +1448,6 @@ class PianoApp:
         tk.Label(card1, text="Buka file MIDI langsung. Cepat & instan dengan analisis nada serta auto-transpose.",
                  bg=CARD_BG, fg=TEXT_DIM, font=(FONT, 8), wraplength=360, justify="left").pack(anchor="w", padx=12, pady=(0, 10))
 
-        # Card 2: Audio AI
         card2 = tk.Frame(win, bg=CARD_BG, bd=1, relief="solid", cursor="hand2")
         card2.pack(fill="x", padx=20, pady=(0, 14))
         c2_top = tk.Frame(card2, bg=CARD_BG)
@@ -1424,7 +1514,6 @@ class PianoApp:
         tk.Label(win, text=f"Durasi: {dur_str}  |  Total Not: {total_notes}  |  Tempo: ~{bpm_detected} BPM",
                  bg=PANEL_BG, fg=TEXT_DIM, font=(FONT, 8)).pack(pady=(2, 8))
 
-        # Transpose selector
         tr_card = tk.Frame(win, bg=CARD_BG, bd=1, relief="solid")
         tr_card.pack(fill="x", padx=16, pady=(0, 8))
 
@@ -1480,7 +1569,7 @@ class PianoApp:
 
             if var_set_bpm.get() and bpm_detected > 0:
                 self.bpm = max(1, min(1000, bpm_detected))
-                self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 3)
+                self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 4)
                 self.btn_bpm_val.set_text(f"BPM: {self.bpm}")
 
             self.sheet_text.delete("1.0", "end")
@@ -1609,7 +1698,7 @@ class PianoApp:
 
     def _set_speed(self, multiplier):
         self.speed_multiplier = float(multiplier)
-        self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 3)
+        self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 4)
         for s, btn in self.speed_buttons.items():
             btn.set_active(s == self.speed_multiplier)
 
@@ -1621,12 +1710,9 @@ class PianoApp:
         self.btn_audio.set_text(lbl, fg_color=fg)
 
     def _on_piano_key_click(self, key):
-        """Handler saat tuts pada virtual piano diklik dengan mouse."""
-        # 1. Mainkan suara jika audio aktif
         if self.audio.is_enabled():
-            self.audio.play_key(key, velocity=95, duration=0.5)
+            self.audio.play_key(key, velocity=95, duration=0.6)
 
-        # 2. Jika Roblox focused, kirim keybd_event ke Roblox
         if _is_roblox_focused():
             base, is_shifted = get_key_press_info(key)
             vk = get_vk_code(base)
@@ -1636,7 +1722,7 @@ class PianoApp:
                         if is_shifted:
                             win_press_vk(VK_SHIFT)
                         win_press_vk(vk)
-                        time.sleep(0.04)
+                        time.sleep(0.035)
                         win_release_vk(vk)
                         if is_shifted:
                             win_release_vk(VK_SHIFT)
@@ -1644,13 +1730,11 @@ class PianoApp:
                         pass
                 threading.Thread(target=_do_send, daemon=True).start()
 
-        # 3. Jika sedang Follower playing, proses sebagai not input
         if not self.auto_mode and self.state == "playing":
             self.on_key(key)
 
     # ---------------------------------------------------------------- Playback Core
     def _release_manual_plus(self):
-        """Lepaskan tombol keyboard jika sedang ditahan oleh manual '+' control."""
         if getattr(self, "_manual_plus_held", False):
             self._manual_plus_held = False
             for k in getattr(self, "_manual_plus_keys", []):
@@ -1706,7 +1790,7 @@ class PianoApp:
 
     def _change_bpm(self, delta):
         self.bpm = max(1, min(1000, self.bpm + delta))
-        self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 3)
+        self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 4)
         self.btn_bpm_val.set_text(f"BPM: {self.bpm}")
 
     def _edit_bpm(self):
@@ -1734,7 +1818,7 @@ class PianoApp:
             raw = entry.get().strip()
             if raw.isdigit() and 20 <= int(raw) <= 1000:
                 self.bpm = int(raw)
-                self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 3)
+                self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 4)
                 self.btn_bpm_val.set_text(f"BPM: {self.bpm}")
                 win.destroy()
 
@@ -1848,7 +1932,7 @@ class PianoApp:
                 pass
 
     def _auto_play_worker(self):
-        """Worker thread sekuensial yang memutar sheet di Auto Mode tanpa race condition."""
+        """Worker thread sekuensial yang memutar sheet di Auto Mode dengan ritme musikal alami."""
         try:
             while self.state == "playing" and self.auto_mode:
                 steps = self.current_steps
@@ -1861,32 +1945,43 @@ class PianoApp:
                         self.root.after(0, self._after_advance)
                         break
 
-                is_rf = _is_roblox_focused()
+                # Jika target adalah Roblox, tunggu sampai Roblox fokus tanpa melewati not
+                if self.auto_target == "roblox":
+                    while not _is_roblox_focused() and self.state == "playing" and self.auto_mode:
+                        time.sleep(0.04)
+
+                    if self.state != "playing" or not self.auto_mode:
+                        break
+
                 pos = self.current_pos
                 step = steps[pos]
                 start_t = time.time()
 
+                # Ambil bobot ritme musikal (weight)
+                step_weight = step[2] if len(step) > 2 else 1.0
+                step_dur = max(0.035, self.rest_delay * step_weight)
+
                 if step[0] == "r":
-                    rest_dur = self.rest_delay * step[1]
-                    end_t = start_t + rest_dur
+                    end_t = start_t + step_dur
                     while time.time() < end_t and self.state == "playing" and self.auto_mode:
-                        time.sleep(min(0.02, max(0.001, end_t - time.time())))
+                        time.sleep(min(0.015, max(0.001, end_t - time.time())))
                 elif step[0] == "n":
                     chars = list(step[1])
-                    # Mainkan audio jika suara diaktifkan
-                    if self.audio.is_enabled():
-                        self.audio.play_chord(chars, velocity=95, duration=self.rest_delay * 0.9)
 
-                    # Kirim ketukan ke Roblox jika Roblox aktif di foreground
-                    if is_rf:
+                    # Mainkan audio dengan resonansi sustain alami
+                    if self.audio.is_enabled():
+                        self.audio.play_chord(chars, velocity=95)
+
+                    # Kirim ketukan ke Roblox jika target Roblox & jendela fokus
+                    if self.auto_target == "roblox" and _is_roblox_focused():
                         self._send_keys_sync(chars)
 
                     spent = time.time() - start_t
-                    remaining = self.rest_delay - spent
+                    remaining = step_dur - spent
                     if remaining > 0.002:
                         end_t = time.time() + remaining
                         while time.time() < end_t and self.state == "playing" and self.auto_mode:
-                            time.sleep(min(0.02, max(0.001, end_t - time.time())))
+                            time.sleep(min(0.015, max(0.001, end_t - time.time())))
 
                 if self.state != "playing" or not self.auto_mode:
                     break
@@ -1909,7 +2004,6 @@ class PianoApp:
             self._auto_worker_running = False
 
     def _after_advance(self):
-        """Dipanggil setelah langkah maju untuk update UI dan deteksi selesai/loop."""
         steps = self.current_steps
         if steps and self.current_pos >= len(steps):
             if self.loop_mode:
@@ -1931,7 +2025,6 @@ class PianoApp:
             pass
 
     def _handle_f6(self):
-        """Hotkey F6: Toggle Auto Play mode dan jalankan/pause playback."""
         if not self.current_steps:
             self._parse_active_sheet()
 
@@ -1948,7 +2041,6 @@ class PianoApp:
                 self._toggle_play()
 
     def _handle_plus_down(self):
-        """Manual control dengan tombol '+' (key down): menekan not aktif di Roblox."""
         if self.auto_mode or self._manual_plus_held:
             return
 
@@ -2035,7 +2127,6 @@ class PianoApp:
                 pass
 
     def _handle_plus_up(self):
-        """Manual control dengan tombol '+' (key up): melepas not di Roblox dan lanjut ke not berikutnya."""
         if not self._manual_plus_held:
             return
 
@@ -2071,7 +2162,6 @@ class PianoApp:
             self._after_advance()
 
     def _tick_body(self):
-        # Update Roblox Focus Badge
         roblox_ok = _is_roblox_focused()
         if getattr(self, "_last_rf", None) != roblox_ok:
             self._last_rf = roblox_ok
@@ -2080,7 +2170,6 @@ class PianoApp:
             else:
                 self.lbl_focus_badge.configure(text="[FOKUS KE ROBLOX]", bg="#2a2410", fg="#f59e0b")
 
-        # Process Input Queue (Follower Mode & Commands)
         try:
             while True:
                 item = self._q.get_nowait()
@@ -2100,7 +2189,6 @@ class PianoApp:
         now = time.time()
         steps = self.current_steps
 
-        # Metronome Tick (jika aktif dan sedang bermain)
         if self.metronome_active and self.state == "playing":
             beat_delay = 60.0 / max(20, self.bpm * self.speed_multiplier)
             if now - self.last_metro_time >= beat_delay:
@@ -2112,7 +2200,8 @@ class PianoApp:
         if not self.auto_mode and self.state == "playing" and steps and self.current_pos < len(steps):
             step = steps[self.current_pos]
             if step[0] == "r":
-                delay = self.rest_delay * step[1]
+                step_weight = step[2] if len(step) > 2 else 1.0
+                delay = max(0.04, self.rest_delay * step_weight)
                 if now - self.last_rest_time >= delay:
                     self.last_rest_time = now
                     self.current_pos += 1
@@ -2125,13 +2214,11 @@ class PianoApp:
                 sc = getattr(e, "scan_code", None)
                 vk = getattr(e, "vk", None)
 
-                # Hotkey F6: Toggle Auto Play mode
                 if name == "f6" or sc == 64 or vk == 117:
                     if e.event_type == "down":
                         self._q.put(("cmd", "f6"))
                     return
 
-                # Tombol '+': Manual control dengan tahan not
                 if name in ("+", "plus", "numpad +", "=") or "+" in name or sc in (13, 78) or vk in (187, 107):
                     if e.event_type == "down":
                         self._q.put(("cmd", "plus_down"))
@@ -2162,16 +2249,13 @@ class PianoApp:
         keyboard.hook(cb)
 
     def on_key(self, key):
-        # 1. Mainkan suara jika audio aktif
         if self.audio.is_enabled():
             self.audio.play_key(key, velocity=95, duration=0.5)
 
-        # 2. Rekam tombol jika mode record aktif
         if self.recording:
             elapsed = time.time() - self.record_start_time
             self.recorded_keys.append((elapsed, key))
 
-        # 3. Follower Mode Advance
         if self.auto_mode or self.state != "playing":
             return
         steps = self.current_steps
@@ -2213,9 +2297,13 @@ class PianoApp:
             self.cfg["geometry"] = self.root.geometry()
             self.cfg["bpm"] = self.bpm
             self.cfg["speed_multiplier"] = self.speed_multiplier
+            self.cfg["transpose"] = self.transpose
+            self.cfg["sustain"] = self.sustain
             self.cfg["loop_mode"] = self.loop_mode
             self.cfg["pinned"] = self.is_pinned
             self.cfg["audio_enabled"] = self.audio.is_enabled()
+            self.cfg["rhythm_mode"] = self.rhythm_mode
+            self.cfg["auto_target"] = self.auto_target
             self.cfg["favorites"] = list(self.song_library.favorites)
             CONFIG_PATH.write_text(json.dumps(self.cfg, indent=2), encoding="utf-8")
         except Exception:

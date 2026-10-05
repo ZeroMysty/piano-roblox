@@ -1,0 +1,19 @@
+# Sheet Roblox Piano: Wet Hands - C418
+# BPM: 180
+# Transpose: -3
+
+8 0 t y u y t w q e u o u t
+8 0 t y u y t w q e u o u t
+[a8] 0 t y u y [st] w [pq] e u o u t
+o p [a8] 0 t y u y [dt] [fw] q [pe] u o u t
+f h [J^] 9 q [je] [gt] e [sq] [d9] ^ 9 q e t
+[J^] 9 [jq] e [gt] e [sq] [d9] ^ 9 q e t
+s [o8] 0 t y u y t w 8 0 t y u o s f
+[p-9-d-g] q e [ft] [su] [oh] [jp] 9 [gq] e t u
+d f [g^] 9 [fq] [ge] t j [f80t]
+d s [d5] 7 9 w r w 9 7 5 7 9 w r w 8
+[J^] [j9] [hq] [ge] [ht] [ge] [hq] [j9] 8 [h0]
+w t [lu] t w 0 [k5] [h7] [d9] [aw] [or]
+[d5] [a7] [o9] [yw] r
+5 7 9 w 9 | 5 7 9 w w
+s [o8] w t y u y t w 8
