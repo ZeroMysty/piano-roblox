@@ -1,0 +1,151 @@
+u u
+u u u
+u u u
+u u u
+[eup] u u
+[rua] u u
+u u u
+[eup] [rua] [tus]
+[rua] [eup] [rua]
+[tus] u u
+[rua] u u
+u u u
+[eup] u [uf]
+[tus] u u
+[rua] u u
+u u u
+[eup] [uf] [tus]
+[rua] [eup] [rua]
+[tus] u u
+[rua] u u
+u u u
+[eup] [uf] [tus]
+[rua] [eup] [rua]
+[tus] u u
+[yud] u u
+[uf] u u
+[eup] a [us] a [up] s
+[rua] p [uo] p [ua] o
+[ua] p [uo] p [ua] o
+[eup] s [rua] d [tus] p
+[rua] o [eup] s [rua] d
+[tus] d [us] a [up] s
+[rua] p [uo] p [ua] o
+[ua] p [uo] f [ua] o
+[ep] u a u s u a u p u s u
+[ra] u p u o u p u a u o u
+a u p u o u f u a u o u
+[ep] u s u [ra] u d u [ts] u p u
+[ra] u o u [ep] u s u [ra] u d u
+[ts] u d u s u a u p u s u
+[ra] u p u o u p u a u o u
+a u p u o u f u a u o u
+[ep] u a u s u a u f u a u
+[ts] u d u s u a u p u s u
+[ra] u p u o u p u a u o u
+a u p u o u f u a u o u
+[ep] u s u f u a u [ts] u p u
+[ra] u o u [ep] u s u [ra] u d u
+[ts] u a u p u a u s u p u
+[yd] u s u a u s u d u a u
+[uf] u f u f u
+f u f u f u
+[uf] [uf] [uf]
+[uf] [uf] [uf]
+[qup] [uf] u
+[up] [uf] u
+[wua] [uf] u
+[ua] [uf] u
+[eus] [uf] u
+[us] [uf] u
+[wud] [uf] u
+[ud] [uf] [ua]
+[4qup] f [uf] f u f
+[up] f [uf] f u f
+[5wua] f [uf] f u f
+[ua] f [uf] f u f
+[6eus] f [uf] f u f
+[us] f [uf] f u f
+[5wud] f [uf] f u f
+[ud] f [uf] f u f
+[pk] [sl] [fk] l [pk] [sl] [fk] l [pk] [sl] [fk] l
+[ak] [dl] [fk] l [ak] [dl] [fk] l [ak] [dl] [fk] l
+[ak] [dl] [fk] l [ak] [dl] [fk] l [ak] [dl] [fk] l
+[pk] [sl] [fk] l [ok] [al] [fk] l [pk] [sl] [fk] l
+[ak] [dl] [fk] l [pk] [sl] [fk] l [ok] [al] [fk] l
+[qpj] t u p [ufx] t q t u p u t
+[qpj] t u p [ufx] t q t u p u t
+[wak] y u a [ufx] y w y u a u y
+[wak] y u a [ufx] y w y u a u y
+[esl] t u s [ufx] t e t u s u t
+[esl] t u s [ufx] t e t u s u t
+[wdz] y u a [ufx] y w y u a u y
+[wdz] y u a [ufx] y w y [uak] a u y
+[4pj] 8 0 e [0fx] 8 4 8 0 e 0 8
+[4pj] 8 0 e [0fx] 8 4 8 0 e 0 8
+[5ak] 9 0 r [0fx] 9 5 9 0 r 0 9
+[5ak] 9 0 r [0fx] 9 5 9 0 r 0 9
+[6sl] 8 0 t [0fx] 8 6 8 0 t 0 8
+[6sl] 8 0 t [0fx] 8 6 8 0 t 0 8
+[5dz] 9 0 r [0fx] 9 5 9 0 r 0 9
+[5dz] 9 0 r [0fx] 9 5 9 [0ak] r 0 9
+[4e] q 0 8 u 8 0 q e q 0 8
+[4e] q 0 8 u 8 0 q e q 0 8
+[5r] 0 9 7 u 7 9 0 r 0 9 7
+[5r] 0 9 7 u 7 9 0 r 0 9 7
+[6t] e 0 8 u 8 0 e t e 0 8
+[6t] e 0 8 u 8 0 e t e 0 8
+[4p] i u t f t u i p i u t
+[4p] i u t f t u i p i u t
+[5a] u y r f r y u a u y r
+[5a] u y r f r y u a u y r
+[6s] p u t f t u p s p u t
+[6s] p u t f t u p s p u t
+[5d] o u y f y u o d o u y
+[5d] o u y f y u o a o u y
+[qes] d f g [uf] d f s d f g h
+[ed] f g h [uj] h g f g h j k
+[wrl] k j k [uh] j k f k h j h
+[rj] k z f [uh] j k h j k z f
+[etl] k l j [uk] l z j l k l j
+[tk] l z j [ul] k l j f l k l
+[wyj] k l z [ul] k l z x k l z
+[yx] k l z [ux] k l z x z l k
+[ipl] z x c [fx] z x l [pz] x c v
+[pz] x c v [fb] v c x [pc] v b n
+[oam] n b n [fv] b n x [an] v b v
+[ab] n x [fv] b n v [ab] n x
+[psm] n m b [fn] m b [sm] n m b
+[sn] m b [fm] n m b [sx] m n m
+[odb] n m [fm] n m [d] n m
+[d] n m [f] n m [a] n m
+[ufx] f f
+f f f
+[4p] [8i] [0u] [et] [0f] [8t] [4u] [8i] [0p] [ei] [0u] [8t]
+[4p] [8i] [0u] [et] [0f] [8t] [4u] [8i] [0p] [ei] [0u] [8t]
+[5a] [9u] [0y] r [0f] [9r] [5y] [9u] [0a] [ru] [0y] [9r]
+[5a] [9u] [0y] r [0f] [9r] [5y] [9u] [0a] [ru] [0y] [9r]
+[6s] [8p] [0u] t [0f] [8t] [6u] [8p] [0s] [tp] [0u] [8t]
+[6s] [8p] [0u] t [0f] [8t] [6u] [8p] [0s] [tp] [0u] [8t]
+[5d] [9o] [0u] [ry] [0f] [9y] [5u] [9o] [0d] [ro] [0u] [9y]
+[5d] [9o] [0u] [ry] [0f] [9y] [5u] [9o] [0a] [ro] [0u] [9y]
+[qj] [tg] [uf] [ps] [ux] [ts] [qf] [tg] [uj] [pg] [uf] [ts]
+[qj] [tg] [uf] [ps] [ux] [ts] [qf] [tg] [uj] [pg] [uf] [ts]
+[wk] [yf] [ud] a [ux] [ya] [wd] [yf] [uk] [af] [ud] [ya]
+[wk] [yf] [ud] a [ux] [ya] [wd] [yf] [uk] [af] [ud] [ya]
+[el] [tj] [uf] s [ux] [ts] [ef] [tj] [ul] [sj] [uf] [ts]
+[el] [tj] [uf] s [ux] [ts] [ef] [tj] [ul] [sj] [uf] [ts]
+[wz] [yh] [uf] [ad] [ux] [yd] [wf] [yh] [uz] [ah] [uf] [yd]
+[wz] [yh] [uf] [ad] [ux] [yd] [wf] [yh] [uk] [ah] [uf] [yd]
+[ib] [sc] [fx] [jl] [f] [sl] [ix] [sc] [fb] [jc] [fx] [sl]
+[ib] [sc] [fx] [jl] [f] [sl] [ix] [sc] [fb] [jc] [fx] [sl]
+[on] [dx] [fz] k [f] [dk] [oz] [dx] [fn] [kx] [fz] [dk]
+[on] [dx] [fz] k [f] [dk] [oz] [dx] [fn] [kx] [fz] [dk]
+[pm] [sb] [fx] l [f] [sl] [px] [sb] [fm] [lb] [fx] [sl]
+[pm] [sb] [fx] l [f] [sl] [px] [sb] [fm] [lb] [fx] [sl]
+[o] [dv] [fx] [kz] [f] [dz] [ox] [dv] [f] [kv] [fx] [dz]
+[o] [db] [fn] [km] [f] [db] [on] [dm] [f] [kn] [fm] [d]
+[ufx] f f
+f f f
+f f f
+f f f

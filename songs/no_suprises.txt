@@ -1,0 +1,67 @@
+[jp] [st] [gi] [st] [jp] [st] [gi] [st] 
+[jp] [st] [gi] [st] [EP] [ST] [gi] [ho] 
+[jp] [st] [gi] [st] [jp] [st] [gi] [st] 
+[jp] [st] [gi] [st] [EP] [ST] [gi] [ho] 
+[jp] t i t [ps] t i [st] 
+[jp] [jt] i [ht] p [gt] i t 
+[jp] E i E [iP] E i E 
+[jp] [Ej] i [Eh] i [gi] o p 
+[dEJ] y P i [dE] i u y 
+[fPt]-[fu] g o h--
+[ij] [st] [gi] [st] [jp] [st] [gi] [st] 
+[jp] [st] [gi] [st] [EP] [ST] [gi] [ho] 
+[jp] t i t [ps] t i [st] 
+[jp] t [ij] [ht] p [gt] i t 
+[jp] E i E [iP] E i E 
+[jp] [Ej] i [Eh] i [gi] o p 
+[dEJ] y P i [dEP] i u y 
+[fPt]-[fu] g o h-jh
+[ij] [st] [gi] [st] [jp] [st] [gi] [st] 
+[jp] [st] [gi] [st] [EP] [ST] [gi] [ho] 
+[ij] t p t [is] t p [st] 
+[ij] t [jp] [ht] i [gt] p t 
+[ij] E i E [iP] E i E 
+[jp] [Ej] i [Eh] [iq] [giq] [ow] [ep] 
+[EgJP] [jy] i [hy] E [dgy] i y 
+[fPt] u [fo] [dg] s [dh]-[gJ] 
+[EgJP] [jy] i [hy] E [dgy] i y 
+[fPt] [fu]-[dg] o [dh]--
+[EgJ] [jy] i [hy] E [dgy] i y 
+[fPt] u [fo] [dg] s [dh]--
+[jp] t i t p t i t 
+[gp] t i t E T i o 
+[gjp] t i t p t i t 
+[gps] t i t E T i o 
+[jp] t i t [jp] t i [jt] 
+[jp] [jt] i [Jt] p [lt] i t 
+[ij] E P E [ij] E P E 
+[ij] [Ej] P [dEJ] [iq] [dijq] [ow] [ep] 
+[EhJP] [gjy] i [fhy] E [dgy] i y 
+[fst] u [fos] [dg] s [dh]-[hJ] 
+[EhJP] [gjy] i [fhy] E [dgy] i y 
+[fst] [fsu]-[dg] o [dh]--
+[EhJP] [gjy] i [fhy] E [dgy] i y 
+[fst] u [fos] [dg]-[dh]--
+[ij] [st] [gi] [st] [jp] [st] [gi] [st] 
+[jp] [st] [gi] [st] [EP] [ST] [gi] [ho] 
+[8fs] w [fsu]-[8g]f[sw] [ot] s 
+[EP] [ST] [gi] [hT] [EHl] [hJT] [gHi] [ST] 
+[8fos] w [fst] o [8g]f[sw] [ot] s 
+[EP] [ST] [gi] [hT] [EHl] [hJT] [gHi] [ST] 
+[doPw] y w [dEo] [Pw] [py] [Pw] [Es] 
+[^EPST]-[8DPtY]-[*EgiP]-[(hoPY]-
+[jq] t p i [jqs] t p i 
+[gjqs] [gjst] p [iJs] q [jst] p [ijs] 
+[Ejs] i p i [Ejs] i p i 
+[Egjs] [gijs] p [iJs] E [ijqs] [ow] [ep] 
+[EhJ] [gjy] P [fhi] P [dgi] P i 
+[fst] u [fs] [Joz] s [jlo] s [hJo] 
+[EhJ] [gjy] i [fhP]-[dgi]--
+[fst] u [fo] [Jsz]-[jlo]--
+[EhJ] [gjy] i [fhP]-[dg]--
+[fst] u [fos] [dg]-[dh]--
+[jp] t i t [gp] t i t 
+p t i [jt] [EJ] [jT] [hi] [Jo] 
+[jp] t i t [gp] t i t 
+p t i [jt] [EJ] [jT] [hi] [Jo] 
+[ijp]----

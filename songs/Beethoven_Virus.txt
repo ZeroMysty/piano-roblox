@@ -1,0 +1,119 @@
+6 6 6 6 6 6 7 6 
+1 6 6 6 6 6 2 6 
+3 6 6 6 6 6 4 6 
+3 6 2 6 1 6 7 6 
+[6] [6] [6] [6] [6] [6] [7] [6] 
+[18] [6] [6] [6] [6] [6] [29] [6] 
+[03] [6] [6] [6] [6] [6] [4q] [6] 
+[03] [6] [29] [6] [18] [6] [7] [6] 
+[6e] [3e] [3e] [6e] [3e] [3e] [6r]e[3W]e
+[6t] [3e] [3e] [6e] [3e] [3e] [6y]e[3W]e
+[6u] [3e] [3e] [6e] [3e] [3e] [6i]e[3W]e
+[6o]e[3W]e[6o]e[3W]e[6O]e[3W]e[6O]e[3W]e
+[6eptu] [3ep] [3ep] [6eptu] [3ep] [3ep] [6ar] [3ep] 
+[6pstu] [3ep] [3ep] [6eptu] [3ep] [3ep] [6dy] [3ep] 
+[6fpsu] [3ep] [3ep] [6eptu] [3ep] [3ep] [6gi] [3ep] 
+[6ho] [3ho] [3ho] [6ho] [3ho] [3ho] [6ho] [3ho] 
+[6HO] [3HO] [3HO] [6HO] [3HO] [3HO] [6HO] [3HO] 
+[3HO] [HO] [3HO] [HO] [3HO] [HO] [3HO] [HO] 
+[3HO] [HO] [3HO] [HO] [3HO] [fu] [jp] [ak] 
+[6fjls] 3 [6] [3dz] [%afHk] 3 [%] [3ls] 
+[6fjps] 3 [6] 3 [6j]H[3j]k[6l]k[3l]z
+[6fjlx]80[efjlx]87[7x]f9xwf[9x]f87
+[158x][9l][0h][fw][st][oy]u[oy][st][fw][0ls]9[2dz] [fx] 
+[2cgjz]46[9cgjz]64[3afHk]%7[0ls]7[dz]%
+[6fjlx]80[efjlx]08[$t]Y6I8p[Qs]D8G6j
+[4DGjls]68[DGjlqs]8[dz]6[3afHk]%7[0afHk]7[ls]%
+[6fjps] [3fjlx][fjlx][6fjlx] [3fjlx] [3fHkx] [3fHkx] [%07bj] [3kn] 
+[6blx] [6f]j[08el]x[6b]z[%knVx] [%f]H[07kW]x[%V]l
+[6bjlx] 6 [08e] 6 [6b]V[6b]n[08el]n[6l]z
+[6x]80[ex]87[7x]x9xwx[9x]x8x7
+[18x]lnvxl[1k]h[1f]hkl[1x]vnl
+[2bcz]6[2bcz]4[6x]9[qz]e[knuVx]rW0[7l]%[3z]7
+[6blx]3[6blx]8[0z]e[lt]u[bCIjlZ]teQ[8bj]6[$kn]1
+[4bClZ]-[68qx]l[4n]b[3knVx]-[07Wx]n[%b]V
+[6bjlx] lnbvcxzlnbvcxzlkjhgfd[6p]--p 
+[03afOu] u Y [03u] [aO] u [0fu]7%[du]3 
+[6fpsu]3[du]6[8su]0aW[ep]u0t8u[6p]u3s1p
+[5adoy] o I [79ow] a o [5h]gfd
+[1fosu] [1g] [358f] [1d] [18s]ouosofs
+[6fpSu] [6u][*S][0ef] [eS][fT][jpu] e [*0e] [6hp] 
+[2dgip] [6fp] [9dp] [0S] [dq] e y sd
+[7aDGI] [7a] [(DQr] [Gr] [IlsY] [kr] [(jQr] [7l] 
+[3afHk] [3j] [%07H] [0j] [kruW] fHkx fHk
+[3fHkx] [3f]Hk[%07x] [3z]l[3k] [3l] [%07z] [3f] 
+[6fjls]f[6k]f[08ej]f[6H]f[6j]f[6k]f[08el]f[6j]f
+[5adhk] [5o]a[79dw]h[5k]z[5v] [5c] [79wx] [5z] 
+[18fhlx]h[8z]h[0ltw]h[8k]h[18l]h[8z]h[0twx]h[8l]h
+[!*j] B-bBvBxvLxjL
+[2b]6[9v][0b][cq]e[by]u[ix]u[by]e[qz][0c][9x][6z]
+[7Z] $ 7k[(Z]C[lQ] [(k] [7n] [$b] 
+[3f]H[3k]z[3x]V[3n]z[7x][0z][nW][rV][ux][Oz][ak][fH]
+[HO][4q][jp][03][HO][(@][jp][03][HO][4q][jp][03][HO][(@]-
+[afk][48q][gls][037][afk][(@^][gls][037][afk][48q][gls][037][afk][(@^]-
+[dhkz][48q][DHlZ][037][dhkz][(@^][DHlZ][037][dhkz][48q][DHlZ][037][dhkz][(@^]-
+[py][Pt][ar][es][Sw][dq][0D][9f][8g][7G][6h][5H][4j]f[2k]f
+[6l]s[6f]j[08el]f[6j]z[%k]a[%f]H[07kW]f[%H]l
+[6bj]x[6l]j[08ej]f[6s]p[6j]H[6j]k[08el]k[6l]z
+[6fjlx]80[efjlx]08[7x]f9xwf[rx]fwx9
+[1x][5l][8h][0f][sw][8o][0u][ow][st][fu][ho][lu][dtz]w[0fx]8
+[2cgjz] [2cgjz] [469c]z[2j]g[3afHk] [3afHk] [%07ls] [3dz] 
+[6fjlx] [6fjlx] [08efpsu] [6fpsu] [$j]s[$D]G[68jQ]f[$k]f
+[4fjls] [4s] [68fq]j[4k]l[3afHk] [3a] [07fW]H[%j]k
+[6fjps]b[6v]c[08ex]z[el]k[jptu]-s d 
+[8D] ( w [gt] [8d] q w [Dr] 
+[8s] ( w t d[sY] [ao] [sY] [dy] g
+[Dt] [do] [DtY] [go] [hry] o [htW]H[ho]H
+[hw] r y o [hw]H[kr]l[yz]Z[co]v
+[qV]n[VW]c[rz]c[yz]k[Hq]g[dW]g[Dr]d[Dy]g
+[(h]H[Gw]H[ht]l[hY]D[sW]a[st]d[DY]d[DI]G
+[hw] t [HY] [Jo] [hw] [hr]H[hy] [do] 
+[st]aOasasdDdDfgfgh
+[4H] [%h] [7J] [9H] [4h]H[%h]g[7D]g[9D]d
+[@h] [5G] [8H] [(h] [%g]h[8g]D[(d]D[dQ]s
+[5D] [8d] [(g] [Dw] [5d]D[7d]S[9d]D[ow]Dd
+[1s]580wtuos[los]u[dz]t[fx]w0[dz]8[ls]5
+[4cgHl]8qWtiOsg[ls]O[dz]i[fx]tW[dz]q[ls]8
+[!cgHl]%*qWTiOS[lOs]i[dz]T[fx]Wq[dz]*[ls]%
+[^4cgJL] ^ [*cEgJLq] ^ [%14cgHl] 4 [135fhlx] 3 
+[4cgHl]14%8qWti[st]Wdqf8%d4s1
+[!g]%*qWTiOS[gO]ihTHWqh*g%
+[^J]4^*qETiP[iJ]THEhq*g^f4
+[%g]sg[%8gHOqsW]gsGDG[(%8DHOsW]GD
+hDh[(58Dhlsw]hDjGj[($68DGjlQs]jG
+kJk[%479dgHkqz]khlkl[(@58DhlZ]lh
+zLz[%479cgHkqz]zkvCv[579dhkwz]lk
+[1Dhls]51@[5o][8s][(D][gw][ht][lw][(Z][8c][5v][@Z][1z][5l]
+[4HlVZ]14%[8HlVZ]q[vW][ct][iZ][tz][lW][kq][8H][%h][4g][1d]
+[1ostY]58([sw][ot][sY][Do][hs]o[sY][Dt][hw]H(h8g5D
+[4adgHk]14%[8k]zcVnq[nW][tV][iv][ct][WZ][qz][8l][%k][4j][1k]
+[%DHls]@%8[(lVZ]WtYOYtW[(lVZ]8%@
+[!cLV]-[!*%4cLV]-[*qTW]-[!*%4cLV]-
+[@]-[(@Z]LlBVvcZLlJHh
+gDSsPOoiYTtEWwq[(@]
+[@*](@*(@*@(*@(@*(@*@(*@(@*(@*@(*@(----
+Y O P 
+[%s] 8 ( [SW] [5P] 8 ( [sw] 
+[4O] % 8 q P[@O] [%o] [8O] [(P] S
+[!s] [4P] [%s] [*S] [@D] 5 [^D] ( 
+[%D] 8 ( W E t [SY] [DW] 
+[*g] W [OT] W [(o] E [gY] E 
+[8D] w t [ow] [4O] 8 [iq] [8s] 
+[^S] 4 [^D] 8 [*g] q [^h] ( 
+[@lS] ^ [(L] [lq] [Jw] [DE] [(H] [%J] 
+[%DHls]@%8[DHlsW]([8DHls][%DHls][5DhJP]@[5DhJP]([DhJPw]([8ls]5
+[4gHOs]14%[giOqs]8%4[@DHOs]([8DHOs]([%ls]@[*DZ]%
+[!cgHL]%*q[gHOST]Wq*[@DhoP]^(w[cgY]Ew(
+[1DhlZ]58(w8(q48[HOq]w[lsW]t[DqZ]*
+[!cgHL]%*q[gHOST]Wq*[@DhoP]^(w[hvY]E[cgw](
+[1DhlZ]5[8LS]0[lsw]0[JPq]8[4gjps]8qw[eJP]t[lqs]^
+[^gHLS]4[^ls]8[*JP]q[*HO]8[^ho]q[*gi]8[^DY]([^ST]5
+[@DoPY]^[(ho]q[JPw]E[HOq]([@DhoP]^[(gi]w[DEY]w[(ST]^
+[%OstY] [%][%][%] [%ST][%][5EoPY] [5][5][5] [5st][5]
+[%OtWY] [%][%][%]Y[%O]s[%D]O[%s]D[%G]O[%s]D
+[5Dhos]@58w([8Dhos]5[5Dhos]@58w([8Dhos]5
+[5adho]257w9[7adho]5[5adho]-[5hv][5hv][5hv]
+[@v]ZlhhDsooYtw-[4hv][4hv][4hv]
+[2v]zkhhdaooyrw-[@l][@l][@l]
+[1r]YoaDhk[1Z]vnZvnv[1Z]nnvZkk[1h]DaaoYr
+[1t]

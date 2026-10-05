@@ -1,0 +1,41 @@
+# Sheet Roblox Piano: Canon In D - J. Pachelbel- MIDI Upload (BPM: ~80) [Transpose: +10]
+
+8 t u o 5 w r y 6 e t u
+3 0 w r 4 q e t 1 8 0 w
+4 q e t 5 w r y [8us] 0 w t
+[5ya] 7 9 w [6tp] 8 0 e [3ro] 5 7 0
+[4ei] 6 8 q [1wu] 3 5 8 [4ei] 6 8 q
+[5ro] 7 9 w [8s] 0 [wu] t [5oa] 7 [9i] w
+[6up] 8 [0t] e [3uo] 5 [7y] 0 [4ti] 6 [8e] q
+[1tu] 3 [5o] 8 [4i] 6 [8e] q [5o] 7 [9i] w
+[8u] 0 w t [5ry] 7 9 w [6t] 8 0 e
+[3ua] 5 [7d] 0 [4ip] 6 8 q [1uo] 3 5 8
+[4ei] 6 8 q [5ro] 7 9 w [tus] 0 w t
+[wya] 7 9 w [etp] 8 0 e [0ua] 5 [7d] 0
+[qtp] 6 8 q [8uo] 3 5 8 [qei] 6 8 q
+[wro] 7 9 w [8s] 0 [ws] t [5a] 7 9 w
+[6p] 8 [0p] e [3a] 5 7 0 [4p] 6 [8p] q
+[1o] 3 [5o] 8 [4ei] 6 [8u] q [5ry] 7 9 w
+[8us] 0 [ws] t [5oa] 7 9 w [6up] 8 [0p] e
+[3ru] 5 7 0 [4ei] 6 [8i] q [1wu] 3 5 8
+[4ei] 6 [8i] q [5ro] 7 9 w [8uo] [0tu] r [wtu]
+[8u] [5wr] [7ro] p [9ya] [wo] [6et] [8tp] a [0us] [etp] [3uo]
+[5uo] y [7tu] [0r] [4ei] [6ei] w [8ei] [qr] [1tu] [3o] i
+[5u] [8o] [4ip] [6tp] o [8ei] [qei] [5wr] [7a] p [9o] [wi]
+[8uos] 0 w t [5yoa] 7 9 w [6tup] 8 0 e
+[3ruo] 5 7 0 [4ei] 6 8 q [1wu] 3 5 8
+[4ip] 6 8 q [5yo] 7 [9r] w [8s] 0 [wu] [tuo]
+[5ruo] [7ip] [9uo] [wyi] [6tu] 8 0 [etu] [3wtu] [5yi] [7tu] [0ry]
+[4et] [6E] [8e] [qE] [1t] 3 5 8 [4et] [6E] [8e] [qE]
+[5wr] 7 9 [wr] [8us] 0 w [tf] [5af] [7g] [9f] [wd]
+[6ps] 8 0 [es] [3os] [5d] [7s] [0a] [4tp] 6 8 q
+[1uo] 3 5 8 [4tp] 6 8 q [5ro] 7 9 w
+[8tu] 0 w [tf] [5af] [7g] [9f] [wd] [6ps] 8 0 [ef]
+[3of] [5g] [7f] [0d] [4s] [6P] [8p] [qP] [1os] 3 5 8
+[4ps] 6 8 q [5ad] 7 9 w [8us] t u o
+[5ya] w r y [6tp] e t u [3ro] 0 w r
+[4ei] q e t [1tu] 8 0 w [4ei] q e t
+[5ro] w r y 8 t u o 5 w r y
+6 e t u 3 0 w r 4 q e t
+1 8 0 w 4 q e t 5 w r y
+[10t]

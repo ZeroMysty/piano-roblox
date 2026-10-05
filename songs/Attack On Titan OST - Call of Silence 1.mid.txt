@@ -1,0 +1,74 @@
+# Sheet Roblox Piano: Attack On Titan OST - Call of Silence (1).mid (BPM: ~120) [Transpose: +11]
+
+i | O | i O [!s] | * | [qW] | *
+[@w] | ( | [wo] | [EO] | Y o [4P] | q
+O W | q | @ | [(w] | [Es] | [wo]
+! i | * | [qWT] | * | [@wE] | (
+[wo] | [EO] | Y o [4P] | q | [WO] | q
+@ | ( | W | ( | ! T | [*q]
+W | q | [@E] | ( | w | [(W] | [4t]
+8 | q | 8 | [@w] | ^ | w | [(T]
+W T [!i] | * | q | W | [@E] | w
+( | [wt] | [4W] | 8 | q | 8 | W
+8 | [4i] | [@s] | i ! s | * | q
+[Ws] [Yo] @ | [(w] | E | [wti] [iO] 4 | q
+[Wti] | q | @ | [(w] | [Ei] | [@s] | [!*]
+[is] | q | [WTi] | [qs] [sh] @ | [(w] | [EYo]
+[wH] [is] 4 | q | E | q W [@w] | (
+w | [Eig] | [wsl] | [!*sl] | q | [WTi] | [qsl]
+[oh] [@(] | w | [EYo] | [wOH] [YD] [4q] | 8
+[qWY] | 8 T [@(wt] | w | [EYD] | [@(ts] [YD]
+[!*] | q | W | [qW] | [@E] | w | [EPJ]
+[wOH] [PJ] [4q] | 8 | q | [WOH] | [4qig] | [@(wE]
+[!*qW] | % | * | q t [@w] | ^ (
+w ( q ^ W 4 8 q 8 W 8 q
+8 4 8 q W [qE] 8 [4Y] [@(] [!*i] % *
+% q [%EYi] [*EO] [%Eo] @ ^ ( ^ w [^E] [(t]
+^ W 4 8 q 8 W 8 q [8W] [@w] ^
+( ^ w W [@w] ^ [(q] ^ t ! % *
+% q % * % [@w] ^ ( ^ w ^ [(w]
+[^q] 4 8 q 8 W 8 q 8 4 8 q
+8 [Wsl] 8 [qPJ] [@(] [!*PJ] % [*OH] q [WOH] q [*DZ]
+q [PJ] @ ^ ( w [Esl] w [(OH] w 4 8
+q [tO] [is] o P i [tO] [@o] ^ ( w [Esl]
+w [(PJ] [@(] [!*PJ] % [*OH] q [Wig] q [*sl] [qPJ] @
+^ ( w [Esl] w [(OH] w [4q] 8 q [tO] [iOD]
+o [OS] i [ts] [@oP] ^ ( w [Esl] w [(PJ] [@(]
+[!*PJ] % [*OH] q [WOH] q [*DZ] [qDZ] @ ^ ( w
+[EPJ] w [(OH] w 4 8 q [tO] [iP] o i [ti]
+[@o] ^ ( w [Eig] w [(OH] [@(] [!*PJ] % * q
+P S g [WJ] q [*OH] q [@PJ] ^ [(PJ] w [Esl]
+w [(OH] w 4 8 [qwo] 8 [4WO] 8 [4qEP] 8 [@ts]
+^ ( [wHV] [Ehv] w [(sl] w [gc] [!*] % * q
+[WTS] q [*ig] q [@YoD] ^ ( [wHV] [Ehv] w [(sl] [wOH]
+4 8 q [tO] [iOD] o [OS] i [tos] [@oP] ^ (
+w [HV] [Ehv] w [(sl] w [gc] ! % * q [Wig]
+q [*gc] [qhv] @ ^ ( [wig] [Eoh] w [(JB] [wHV] [4q]
+8 q [tO] [iOD] o [OS] i [tOs] [@P] ^ [(s] [wP]
+[EO] w [(o] [@(Y] [!*i] % * q W q [*ts] q
+[@(oh] ^ ( w E w [(EP] w [4WO] 8 q [WO]
+q 8 [4WO] 8 [@EP] ^ ( [wg] [El] [wg] [@c] [^g]
+[!v] [%g] [*c] [qg] [Wl] [qg] [*c] [qg] [@v] [^g] [(c] [wg]
+[El] [wg] [(J] [wg] [4H] 8 q [tP] [iPD] t [PS] q
+[ts] [@P] ^ ( w [EPJ] w [@OH] ^ [!ig] % *
+q W q [*ts] q [@ig] ^ ( w E w [(oh]
+w [1uf] | 1 [50] w 8 t w u [to] [8s]
+w f h [18l] [fhl] [1fhl] | [HV] | [hv] | [sl]
+! [gc] | ! % [*T] i [qO] P [WS] g [qH]
+J [!*L] c [%V] L [@(Zv] ^ ( [wHV] [Ehv] w [(sl]
+[wOH] [4q] 8 q [tO] [iOD] o [OS] i [ts] [@oP] ^
+( [wHV] [Ehv] w [(sl] [wgc] ! % * q [Wig] q
+[*gc] [qhv] @ ^ ( [wig] [Eoh] w [(JB] [wHV] [4q] 8
+q [tO] [iP] o [Os] i [tOS] [@(PD] ^ ( [wHV] [Ehv]
+w [(sl] [wgc] [!*] % * q [WTS] q [*ig] q [@YoD]
+^ ( [wHV] [Ehv] w [(sl] [wOH] [4q] 8 q [tO] [iP]
+o O i [ti] [@o] ^ ( [wHV] [Ehv] w [(HV] [wJB]
+[!*] % * q W q [*l] q l [@(] ^ (
+w E w [(HV] w [hv] 4 | 4 8 W t
+i O [qis] [tOg] [is] g i s g H l c
+V v | l | [Tc] | O | S | D
+[Yg] | P l [DB] | [PV] c i | s | g
+[sH] | [Yh] | P V [Dv] | [PV] B T | O
+S | [gl] l Y | P | D | [hV] | D
+h [Jv] | c | H [il] c | s | g
+x | g H l c
