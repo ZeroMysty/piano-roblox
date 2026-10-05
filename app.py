@@ -929,7 +929,7 @@ class PianoApp:
         self.bpm = int(self.cfg.get("bpm", 180))  # Default 180 BPM untuk PlayPianoSheets
         self.speed_multiplier = float(self.cfg.get("speed_multiplier", 1.0))
         self.rest_delay = round(60.0 / max(1, self.bpm * self.speed_multiplier), 4)
-        self.auto_mode = False      # Default: Follower Mode
+        self.auto_mode = bool(self.cfg.get("auto_mode", True))      # Default: Auto Player aktif langsung
         self.transpose = int(self.cfg.get("transpose", 0))
         self.sustain = bool(self.cfg.get("sustain", True))
         self.rhythm_mode = self.cfg.get("rhythm_mode", "presisi")
@@ -1101,15 +1101,19 @@ class PianoApp:
         dock.pack(fill="x", padx=12, pady=(4, 8))
 
         # Playback Controls
-        self.btn_play = RoundedButton(dock, text="Play", command=self._toggle_play, width=62, height=36,
-                                      font=(FONT, 9, "bold"), fg_color=COLOR_CORRECT)
+        play_title = "AutoPlay" if self.auto_mode else "Latihan"
+        play_color = ACCENT_PURPLE if self.auto_mode else COLOR_CORRECT
+        self.btn_play = RoundedButton(dock, text=play_title, command=self._toggle_play, width=72, height=36,
+                                      font=(FONT, 9, "bold"), fg_color=play_color)
         self.btn_play.pack(side="left", padx=2)
         self.btn_stop = RoundedButton(dock, text="Stop", command=self._stop, width=52, height=36, font=(FONT, 9, "bold"))
         self.btn_stop.pack(side="left", padx=2)
 
         # Mode Switch (Follower vs Auto Player)
-        self.btn_mode_toggle = RoundedButton(dock, text="Follower Mode", command=self._toggle_auto_mode,
-                                             width=102, height=36, font=(FONT, 8, "bold"))
+        mode_text = "Auto Player" if self.auto_mode else "Follower Mode"
+        mode_color = ACCENT_CYAN if self.auto_mode else TEXT_WHITE
+        self.btn_mode_toggle = RoundedButton(dock, text=mode_text, command=self._toggle_auto_mode,
+                                             width=98, height=36, font=(FONT, 8, "bold"), fg_color=mode_color)
         self.btn_mode_toggle.pack(side="left", padx=2)
 
         # Transpose Controls (TRANS: -3 / + / Reset)
@@ -1765,7 +1769,7 @@ class PianoApp:
             self.state = "playing"
             self.last_rest_time = time.time()
             self.last_metro_time = time.time()
-            self.btn_play.set_text("Pause", fg_color=COLOR_CORRECT)
+            self.btn_play.set_text("Pause", fg_color="#f43f5e")
             self._update_visual_canvas()
             if self.auto_mode:
                 self._start_auto_worker_if_needed()
@@ -1774,7 +1778,9 @@ class PianoApp:
         self._release_manual_plus()
         if self.state == "playing":
             self.state = "paused"
-            self.btn_play.set_text("Play", fg_color=COLOR_CORRECT)
+            play_title = "AutoPlay" if self.auto_mode else "Latihan"
+            play_color = ACCENT_PURPLE if self.auto_mode else COLOR_CORRECT
+            self.btn_play.set_text(play_title, fg_color=play_color)
             self._update_visual_canvas()
 
     def _stop(self):
@@ -1783,7 +1789,9 @@ class PianoApp:
         self.current_pos = 0
         self.combo = 0
         self.slots[self.active_slot]["status"] = {}
-        self.btn_play.set_text("Play", fg_color=COLOR_CORRECT)
+        play_title = "AutoPlay" if self.auto_mode else "Latihan"
+        play_color = ACCENT_PURPLE if self.auto_mode else COLOR_CORRECT
+        self.btn_play.set_text(play_title, fg_color=play_color)
         if self.audio:
             self.audio.stop_all()
         self._update_visual_canvas()
@@ -1834,10 +1842,14 @@ class PianoApp:
         if self.auto_mode:
             self.btn_mode_toggle.set_text("Auto Player", fg_color=ACCENT_CYAN)
             self.btn_mode_toggle.set_active(True, active_border=ACCENT_CYAN)
+            if self.state != "playing":
+                self.btn_play.set_text("AutoPlay", fg_color=ACCENT_PURPLE)
             self._start_auto_worker_if_needed()
         else:
             self.btn_mode_toggle.set_text("Follower Mode", fg_color=TEXT_WHITE)
             self.btn_mode_toggle.set_active(False)
+            if self.state != "playing":
+                self.btn_play.set_text("Latihan", fg_color=COLOR_CORRECT)
 
     def _start_auto_worker_if_needed(self):
         if self.auto_mode and self.state == "playing":
@@ -1976,6 +1988,13 @@ class PianoApp:
                     if self.auto_target == "roblox" and _is_roblox_focused():
                         self._send_keys_sync(chars)
 
+                    # Nyalakan tuts piano virtual secara sinkron di UI thread
+                    if hasattr(self, "keyboard_canvas"):
+                        def _flash(ch_list=chars):
+                            for ch in ch_list:
+                                self.keyboard_canvas.flash_key(ch, color=COLOR_CORRECT, duration_ms=180)
+                        self.root.after(0, _flash)
+
                     spent = time.time() - start_t
                     remaining = step_dur - spent
                     if remaining > 0.002:
@@ -1996,7 +2015,9 @@ class PianoApp:
                             self.slots[self.active_slot]["status"] = {}
                         else:
                             self.state = "finished"
-                            self.btn_play.set_text("Play", fg_color=COLOR_CORRECT)
+                            play_title = "AutoPlay" if self.auto_mode else "Latihan"
+                            play_color = ACCENT_PURPLE if self.auto_mode else COLOR_CORRECT
+                            self.btn_play.set_text(play_title, fg_color=play_color)
                     self._update_visual_canvas()
 
                 self.root.after(0, _ui_update)
@@ -2011,7 +2032,9 @@ class PianoApp:
                 self.slots[self.active_slot]["status"] = {}
             else:
                 self.state = "finished"
-                self.btn_play.set_text("Play", fg_color=COLOR_CORRECT)
+                play_title = "AutoPlay" if self.auto_mode else "Latihan"
+                play_color = ACCENT_PURPLE if self.auto_mode else COLOR_CORRECT
+                self.btn_play.set_text(play_title, fg_color=play_color)
         self._update_visual_canvas()
 
     def _tick(self):
