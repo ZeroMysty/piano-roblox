@@ -948,6 +948,7 @@ class PianoApp:
         self._manual_plus_held = False
         self._manual_plus_keys = []
         self._manual_plus_shifted = False
+        self._plus_held = False
 
         self.combo = 0
         self.max_combo = 0
@@ -1739,6 +1740,7 @@ class PianoApp:
 
     # ---------------------------------------------------------------- Playback Core
     def _release_manual_plus(self):
+        self._plus_held = False
         if getattr(self, "_manual_plus_held", False):
             self._manual_plus_held = False
             for k in getattr(self, "_manual_plus_keys", []):
@@ -2064,7 +2066,11 @@ class PianoApp:
                 self._toggle_play()
 
     def _handle_plus_down(self):
-        if self.auto_mode or self._manual_plus_held:
+        """Assist key '+' di Follower Mode: tap atau tahan untuk memainkan not & menggeser sheet seketika."""
+        if self.auto_mode:
+            return
+
+        if getattr(self, "_plus_held", False):
             return
 
         if not _is_roblox_focused():
@@ -2086,8 +2092,9 @@ class PianoApp:
                 self.current_pos = 0
                 self.slots[self.active_slot]["status"] = {}
             self.state = "playing"
-            self.btn_play.set_text("Playing", fg_color=COLOR_CORRECT)
+            self.btn_play.set_text("Pause", fg_color="#f43f5e")
 
+        # Lewati rest di awal jika ada
         while self.current_pos < len(steps) and steps[self.current_pos][0] == "r":
             self.current_pos += 1
 
@@ -2095,94 +2102,88 @@ class PianoApp:
             self._after_advance()
             return
 
-        step = steps[self.current_pos]
-        if step[0] != "n":
-            return
-
-        chars = list(step[1])
-        if self.audio.is_enabled():
-            self.audio.play_chord(chars, velocity=95, duration=0.8)
-
-        shifted_bases = []
-        unshifted_bases = []
-        for ch in chars:
-            base, is_shifted = get_key_press_info(ch)
-            if is_shifted:
-                shifted_bases.append(base)
-            else:
-                unshifted_bases.append(base)
-
-        all_bases = shifted_bases + unshifted_bases
-        self._manual_plus_keys = all_bases
-        self._manual_plus_shifted = bool(shifted_bases)
-        self._manual_plus_held = True
-
-        if _is_roblox_focused():
-            with _injected_lock:
-                for b in all_bases:
-                    _injected_keys[b] = _injected_keys.get(b, 0) + 1
-
-            try:
-                INTER_KEY_SEC = 0.006
-                if shifted_bases:
-                    win_press_vk(VK_SHIFT)
-                    time.sleep(INTER_KEY_SEC)
-                    for b in shifted_bases:
-                        vk = get_vk_code(b)
-                        if vk:
-                            win_press_vk(vk)
-                            time.sleep(INTER_KEY_SEC)
-                    if unshifted_bases:
-                        win_release_vk(VK_SHIFT)
-                        time.sleep(INTER_KEY_SEC)
-                        for b in unshifted_bases:
-                            vk = get_vk_code(b)
-                            if vk:
-                                win_press_vk(vk)
-                                time.sleep(INTER_KEY_SEC)
-                else:
-                    for b in unshifted_bases:
-                        vk = get_vk_code(b)
-                        if vk:
-                            win_press_vk(vk)
-                            time.sleep(INTER_KEY_SEC)
-            except Exception:
-                pass
+        self._plus_held = True
+        threading.Thread(target=self._plus_hold_worker, daemon=True).start()
 
     def _handle_plus_up(self):
-        if not self._manual_plus_held:
-            return
+        """Lepas tombol '+': menghentikan worker hold mode."""
+        self._plus_held = False
+        self._release_manual_plus()
 
-        self._manual_plus_held = False
-        keys_to_release = list(getattr(self, "_manual_plus_keys", []))
-        was_shifted = getattr(self, "_manual_plus_shifted", False)
-        self._manual_plus_keys = []
-        self._manual_plus_shifted = False
+    def _plus_hold_worker(self):
+        """Worker thread yang memainkan not dan langsung menggeser sheet selama tombol + ditekan/ditahan."""
+        try:
+            while getattr(self, "_plus_held", False) and self.state == "playing" and not self.auto_mode:
+                steps = self.current_steps
+                if not steps or self.current_pos >= len(steps):
+                    if self.loop_mode:
+                        self.current_pos = 0
+                        self.slots[self.active_slot]["status"] = {}
+                    else:
+                        self.state = "finished"
+                        def _finish():
+                            self._after_advance()
+                        self.root.after(0, _finish)
+                        break
 
-        INTER_KEY_SEC = 0.006
-        for k in keys_to_release:
-            try:
-                vk = get_vk_code(k)
-                if vk:
-                    win_release_vk(vk)
-                    time.sleep(INTER_KEY_SEC)
-            except Exception:
-                pass
+                pos = self.current_pos
+                step = steps[pos]
+                start_t = time.time()
 
-        if was_shifted:
-            try:
-                win_release_vk(VK_SHIFT)
-            except Exception:
-                pass
+                step_weight = step[2] if len(step) > 2 else 1.0
+                step_dur = max(0.035, self.rest_delay * step_weight)
 
-        steps = self.current_steps
-        if self.state == "playing" and steps and self.current_pos < len(steps):
-            self.current_step_status[self.current_pos] = "correct"
-            self.combo += 1
-            self.correct_count += 1
-            self.last_rest_time = time.time()
-            self.current_pos += 1
-            self._after_advance()
+                if step[0] == "r":
+                    end_t = start_t + step_dur
+                    while time.time() < end_t and getattr(self, "_plus_held", False) and self.state == "playing":
+                        time.sleep(min(0.015, max(0.001, end_t - time.time())))
+                    if not getattr(self, "_plus_held", False):
+                        self.current_pos = pos + 1
+                        self.root.after(0, self._update_visual_canvas)
+                        break
+                    self.current_pos = pos + 1
+                    self.root.after(0, self._update_visual_canvas)
+                    continue
+
+                elif step[0] == "n":
+                    chars = list(step[1])
+
+                    # 1. Mainkan audio sintetis piano
+                    if self.audio.is_enabled():
+                        self.audio.play_chord(chars, velocity=95)
+
+                    # 2. Kirim input ke Roblox jika jendela aktif
+                    if _is_roblox_focused():
+                        self._send_keys_sync(chars)
+
+                    # 3. Nyalakan tuts visual keyboard seketika
+                    if hasattr(self, "keyboard_canvas"):
+                        def _flash(ch_list=chars):
+                            for ch in ch_list:
+                                self.keyboard_canvas.flash_key(ch, color=COLOR_CORRECT, duration_ms=180)
+                        self.root.after(0, _flash)
+
+                    # 4. Tandai benar, tambah combo, dan MAJUKAN NOT SEKETIKA!
+                    self.current_step_status[pos] = "correct"
+                    self.combo += 1
+                    self.correct_count += 1
+                    self.current_pos = pos + 1
+
+                    # 5. Update visual canvas agar sheet LANGSUNG BERGESER di layar
+                    def _ui_update():
+                        self._update_visual_canvas()
+                    self.root.after(0, _ui_update)
+
+                    # 6. Tunggu durasi ketukan not sebelum lanjut ke not berikutnya
+                    spent = time.time() - start_t
+                    remaining = step_dur - spent
+                    if remaining > 0.002:
+                        end_t = time.time() + remaining
+                        while time.time() < end_t and getattr(self, "_plus_held", False) and self.state == "playing":
+                            time.sleep(min(0.015, max(0.001, end_t - time.time())))
+
+        finally:
+            self._plus_held = False
 
     def _tick_body(self):
         roblox_ok = _is_roblox_focused()
